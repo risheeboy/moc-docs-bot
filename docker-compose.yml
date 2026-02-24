@@ -1,0 +1,1088 @@
+version: '3.9'
+
+services:
+  # ============================================================================
+  # REVERSE PROXY & ROUTING
+  # ============================================================================
+  nginx:
+    build:
+      context: ./infrastructure/nginx
+      dockerfile: Dockerfile
+    container_name: rag-qa-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infrastructure/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+      langfuse:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=nginx"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '2'
+        memory: 1G
+      reservations:
+        cpus: '1'
+        memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================================
+  # API GATEWAY
+  # ============================================================================
+  api-gateway:
+    image: python:3.11-slim
+    container_name: rag-qa-api-gateway
+    ports:
+      - "8000:8000"
+    working_dir: /app
+    command: >
+      bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
+      pydantic-settings>=2.7 httpx>=0.28 structlog>=24.4 prometheus-client>=0.21
+      redis>=5.2 asyncpg>=0.30 sqlalchemy[asyncio]>=2.0 python-jose[cryptography]>=3.3
+      passlib[bcrypt]>=1.7 semantic-router langfuse>=2.56 python-multipart &&
+      python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      APP_SECRET_KEY: ${APP_SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      JWT_REFRESH_TOKEN_EXPIRE_DAYS: ${JWT_REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RAG_SERVICE_URL: ${RAG_SERVICE_URL}
+      LLM_SERVICE_URL: ${LLM_SERVICE_URL}
+      SPEECH_SERVICE_URL: ${SPEECH_SERVICE_URL}
+      TRANSLATION_SERVICE_URL: ${TRANSLATION_SERVICE_URL}
+      OCR_SERVICE_URL: ${OCR_SERVICE_URL}
+      INGESTION_SERVICE_URL: ${INGESTION_SERVICE_URL}
+      TRAINING_SERVICE_URL: ${TRAINING_SERVICE_URL}
+      RATE_LIMIT_ADMIN: ${RATE_LIMIT_ADMIN:-120}
+      RATE_LIMIT_EDITOR: ${RATE_LIMIT_EDITOR:-90}
+      RATE_LIMIT_VIEWER: ${RATE_LIMIT_VIEWER:-30}
+      RATE_LIMIT_API_CONSUMER: ${RATE_LIMIT_API_CONSUMER:-60}
+      LANGFUSE_HOST: ${LANGFUSE_HOST}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+      SESSION_IDLE_TIMEOUT_SECONDS: ${SESSION_IDLE_TIMEOUT_SECONDS:-1800}
+      SESSION_MAX_TURNS: ${SESSION_MAX_TURNS:-50}
+      SESSION_CONTEXT_WINDOW_TOKENS: ${SESSION_CONTEXT_WINDOW_TOKENS:-4096}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+    volumes:
+      - ./services/api-gateway:/app:ro
+      - uploaded-docs:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+      llm-service:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=api-gateway"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=02"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 4G
+      reservations:
+        cpus: '2'
+        memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ============================================================================
+  # RAG SERVICE
+  # ============================================================================
+  rag-service:
+    image: python:3.11-slim
+    container_name: rag-qa-rag-service
+    ports:
+      - "8001:8001"
+    working_dir: /app
+    command: >
+      bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
+      pydantic-settings>=2.7 httpx>=0.28 structlog>=24.4 prometheus-client>=0.21
+      redis>=5.2 asyncpg>=0.30 sqlalchemy[asyncio]>=2.0 pymilvus>=2.4 minio>=7.2
+      langfuse>=2.56 python-multipart llama-index sentence-transformers onnxruntime pillow &&
+      python -m uvicorn app.main:app --host 0.0.0.0 --port 8001"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APP_ENV: ${APP_ENV:-production}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL}
+      RAG_VISION_EMBEDDING_MODEL: ${RAG_VISION_EMBEDDING_MODEL}
+      RAG_CHUNK_SIZE: ${RAG_CHUNK_SIZE:-512}
+      RAG_CHUNK_OVERLAP: ${RAG_CHUNK_OVERLAP:-64}
+      RAG_TOP_K: ${RAG_TOP_K:-10}
+      RAG_RERANK_TOP_K: ${RAG_RERANK_TOP_K:-5}
+      RAG_CONFIDENCE_THRESHOLD: ${RAG_CONFIDENCE_THRESHOLD:-0.65}
+      RAG_CACHE_TTL_SECONDS: ${RAG_CACHE_TTL_SECONDS:-3600}
+      MILVUS_HOST: ${MILVUS_HOST}
+      MILVUS_PORT: ${MILVUS_PORT}
+      MILVUS_COLLECTION_TEXT: ${MILVUS_COLLECTION_TEXT}
+      MILVUS_COLLECTION_IMAGE: ${MILVUS_COLLECTION_IMAGE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB_CACHE: ${REDIS_DB_CACHE:-0}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET_DOCUMENTS: ${MINIO_BUCKET_DOCUMENTS}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      LANGFUSE_HOST: ${LANGFUSE_HOST}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+    volumes:
+      - ./services/rag-service:/app:ro
+      - uploaded-docs:/app/uploads
+      - model-cache:/app/models
+    depends_on:
+      milvus:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=rag-service"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=03"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; resp = requests.get('http://localhost:8001/health', timeout=5); assert 'healthy' in resp.text"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 8G
+      reservations:
+        cpus: '2'
+        memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ============================================================================
+  # LLM SERVICE (vLLM with OpenAI API compatibility)
+  # ============================================================================
+  llm-service:
+    image: vllm/vllm-openai:latest
+    container_name: rag-qa-llm-service
+    ports:
+      - "8002:8000"
+    environment:
+      CUDA_VISIBLE_DEVICES: 0
+      VLLM_ATTENTION_BACKEND: xformers
+      VLLM_WORKER_MULTIPROC_METHOD: spawn
+    command: >
+      --model meta-llama/Llama-3.1-8B-Instruct-AWQ
+      --tensor-parallel-size 1
+      --dtype auto
+      --api-key ${LLM_API_KEY:-sk-ragqa-llm}
+      --max-model-len 8192
+      --gpu-memory-utilization 0.85
+      --served-model-name meta-llama/Llama-3.1-8B-Instruct-AWQ
+    volumes:
+      - model-cache:/root/.cache/huggingface
+    depends_on:
+      - redis
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=llm-service"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=04"
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-H", "Authorization: Bearer ${LLM_API_KEY:-sk-ragqa-llm}", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    resources:
+      limits:
+        cpus: '8'
+        memory: 24G
+      reservations:
+        cpus: '6'
+        memory: 20G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # SPEECH SERVICE (STT + TTS)
+  # ============================================================================
+  speech-service:
+    image: python:3.11-slim
+    container_name: rag-qa-speech-service
+    ports:
+      - "8003:8003"
+    working_dir: /app
+    command: >
+      bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
+      pydantic-settings>=2.7 structlog>=24.4 prometheus-client>=0.21
+      python-multipart librosa scipy numpy torch torchaudio transformers &&
+      python -m uvicorn app.main:app --host 0.0.0.0 --port 8003"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APP_ENV: ${APP_ENV:-production}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      SPEECH_STT_MODEL: ${SPEECH_STT_MODEL}
+      SPEECH_TTS_HINDI_MODEL: ${SPEECH_TTS_HINDI_MODEL}
+      SPEECH_TTS_ENGLISH_MODEL: ${SPEECH_TTS_ENGLISH_MODEL}
+      SPEECH_SAMPLE_RATE: ${SPEECH_SAMPLE_RATE:-16000}
+      CUDA_VISIBLE_DEVICES: 1
+    volumes:
+      - ./services/speech-service:/app:ro
+      - model-cache:/app/models
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=speech-service"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=05"
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8003/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 12G
+      reservations:
+        cpus: '3'
+        memory: 8G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # TRANSLATION SERVICE (IndicTrans2)
+  # ============================================================================
+  translation-service:
+    image: python:3.11-slim
+    container_name: rag-qa-translation-service
+    ports:
+      - "8004:8004"
+    working_dir: /app
+    command: >
+      bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
+      pydantic-settings>=2.7 structlog>=24.4 prometheus-client>=0.21 redis>=5.2
+      python-multipart torch transformers nltk cython &&
+      python -m uvicorn app.main:app --host 0.0.0.0 --port 8004"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APP_ENV: ${APP_ENV:-production}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      TRANSLATION_MODEL: ${TRANSLATION_MODEL}
+      TRANSLATION_CACHE_TTL_SECONDS: ${TRANSLATION_CACHE_TTL_SECONDS:-86400}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB_TRANSLATION: ${REDIS_DB_TRANSLATION:-3}
+      CUDA_VISIBLE_DEVICES: 2
+    volumes:
+      - ./services/translation-service:/app:ro
+      - model-cache:/app/models
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=translation-service"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=06"
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8004/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 12G
+      reservations:
+        cpus: '3'
+        memory: 8G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # OCR SERVICE (Tesseract + EasyOCR)
+  # ============================================================================
+  ocr-service:
+    image: python:3.11-slim
+    container_name: rag-qa-ocr-service
+    ports:
+      - "8005:8005"
+    working_dir: /app
+    command: >
+      bash -c "apt-get update && apt-get install -y tesseract-ocr-hin tesseract-ocr &&
+      pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
+      pydantic-settings>=2.7 structlog>=24.4 prometheus-client>=0.21
+      python-multipart pillow pytesseract easyocr numpy &&
+      python -m uvicorn app.main:app --host 0.0.0.0 --port 8005"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APP_ENV: ${APP_ENV:-production}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      OCR_TESSERACT_LANG: ${OCR_TESSERACT_LANG:-hin+eng}
+      OCR_EASYOCR_LANGS: ${OCR_EASYOCR_LANGS:-hi,en}
+    volumes:
+      - ./services/ocr-service:/app:ro
+      - uploaded-docs:/app/uploads
+      - model-cache:/app/models
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=ocr-service"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=07"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8005/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 8G
+      reservations:
+        cpus: '2'
+        memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # DATA INGESTION ENGINE
+  # ============================================================================
+  data-ingestion:
+    image: python:3.11-slim
+    container_name: rag-qa-data-ingestion
+    ports:
+      - "8006:8006"
+    working_dir: /app
+    command: >
+      bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
+      pydantic-settings>=2.7 httpx>=0.28 structlog>=24.4 prometheus-client>=0.21
+      redis>=5.2 asyncpg>=0.30 sqlalchemy[asyncio]>=2.0 minio>=7.2
+      python-multipart scrapy playwright docx2docx pymupdf &&
+      python -m uvicorn app.main:app --host 0.0.0.0 --port 8006"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APP_ENV: ${APP_ENV:-production}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      INGESTION_SERVICE_URL: ${INGESTION_SERVICE_URL}
+      INGESTION_SCRAPE_INTERVAL_HOURS: ${INGESTION_SCRAPE_INTERVAL_HOURS:-24}
+      INGESTION_MAX_CONCURRENT_SPIDERS: ${INGESTION_MAX_CONCURRENT_SPIDERS:-4}
+      INGESTION_RESPECT_ROBOTS_TXT: ${INGESTION_RESPECT_ROBOTS_TXT:-true}
+      RAG_SERVICE_URL: ${RAG_SERVICE_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET_DOCUMENTS: ${MINIO_BUCKET_DOCUMENTS}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - ./services/data-ingestion:/app:ro
+      - uploaded-docs:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=data-ingestion"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=09"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8006/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 8G
+      reservations:
+        cpus: '2'
+        memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # MODEL TRAINING SERVICE
+  # ============================================================================
+  model-training:
+    image: python:3.11-slim
+    container_name: rag-qa-model-training
+    ports:
+      - "8007:8007"
+    working_dir: /app
+    command: >
+      bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
+      pydantic-settings>=2.7 httpx>=0.28 structlog>=24.4 prometheus-client>=0.21
+      minio>=7.2 python-multipart torch transformers peft bitsandbytes &&
+      python -m uvicorn app.main:app --host 0.0.0.0 --port 8007"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APP_ENV: ${APP_ENV:-production}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      TRAINING_LORA_RANK: ${TRAINING_LORA_RANK:-16}
+      TRAINING_LORA_ALPHA: ${TRAINING_LORA_ALPHA:-32}
+      TRAINING_LEARNING_RATE: ${TRAINING_LEARNING_RATE:-2e-4}
+      TRAINING_EPOCHS: ${TRAINING_EPOCHS:-3}
+      TRAINING_BATCH_SIZE: ${TRAINING_BATCH_SIZE:-4}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET_MODELS: ${MINIO_BUCKET_MODELS}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      CUDA_VISIBLE_DEVICES: 3
+    volumes:
+      - ./services/model-training:/app:ro
+      - model-cache:/app/models
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=model-training"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=10"
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8007/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    resources:
+      limits:
+        cpus: '8'
+        memory: 24G
+      reservations:
+        cpus: '6'
+        memory: 20G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # DATABASES & CACHES
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: rag-qa-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/scripts/init-postgres.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=postgres"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '2'
+        memory: 4G
+      reservations:
+        cpus: '1'
+        memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: rag-qa-redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 4gb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=redis"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    resources:
+      limits:
+        cpus: '1'
+        memory: 5G
+      reservations:
+        cpus: '0.5'
+        memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # VECTOR DB & METADATA
+  # ============================================================================
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.14
+    container_name: rag-qa-etcd
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: 1000
+      ETCD_QUOTA_BACKEND_BYTES: 4294967296
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd-data:/etcd
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=etcd"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "etcdctl", "--endpoints=http://127.0.0.1:2379", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    resources:
+      limits:
+        cpus: '1'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: rag-qa-milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    environment:
+      COMMON_STORAGETYPE: local
+      PULSAR_ADDRESS: http://milvus:6650
+    command: milvus run standalone
+    volumes:
+      - milvus-data:/var/lib/milvus
+    depends_on:
+      etcd:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=milvus"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 16G
+      reservations:
+        cpus: '2'
+        memory: 8G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # OBJECT STORAGE
+  # ============================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: rag-qa-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+      MINIO_CONSOLE_ADDRESS: ":9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=minio"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '4'
+        memory: 8G
+      reservations:
+        cpus: '2'
+        memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # MONITORING & OBSERVABILITY
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rag-qa-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.external-url=http://prometheus:9090'
+    volumes:
+      - ./infrastructure/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=prometheus"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '2'
+        memory: 4G
+      reservations:
+        cpus: '1'
+        memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rag-qa-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-clock-panel
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_SERVER_ROOT_URL: http://grafana:3000
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./infrastructure/monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=grafana"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '1'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # LLM OBSERVABILITY
+  # ============================================================================
+  langfuse-postgres:
+    image: postgres:16-alpine
+    container_name: rag-qa-langfuse-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${LANGFUSE_PG_DB}
+      POSTGRES_USER: ${LANGFUSE_PG_USER}
+      POSTGRES_PASSWORD: ${LANGFUSE_PG_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - langfuse-pg-data:/var/lib/postgresql/data
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=langfuse-postgres"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LANGFUSE_PG_USER} -d ${LANGFUSE_PG_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '1'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: rag-qa-langfuse
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://${LANGFUSE_PG_USER}:${LANGFUSE_PG_PASSWORD}@langfuse-postgres:5432/${LANGFUSE_PG_DB}
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:-change-me-in-production}
+      NEXTAUTH_URL: http://langfuse:3000
+      SALT: ${LANGFUSE_SALT:-change-me-in-production}
+    depends_on:
+      langfuse-postgres:
+        condition: service_healthy
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=langfuse"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    resources:
+      limits:
+        cpus: '2'
+        memory: 4G
+      reservations:
+        cpus: '1'
+        memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # LOG AGGREGATION
+  # ============================================================================
+  loki:
+    image: grafana/loki:latest
+    container_name: rag-qa-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./infrastructure/monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=loki"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '2'
+        memory: 4G
+      reservations:
+        cpus: '1'
+        memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================================================
+  # GPU MONITORING
+  # ============================================================================
+  dcgm-exporter:
+    image: nvidia/k8s/dcgm-exporter:latest
+    container_name: rag-qa-dcgm-exporter
+    ports:
+      - "9400:9400"
+    environment:
+      DCGM_EXPORTER_LISTEN: ":9400"
+      DCGM_EXPORTER_KUBERNETES: "false"
+    networks:
+      - rag-network
+    labels:
+      - "com.ragqa.service=dcgm-exporter"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=01"
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9400/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    resources:
+      limits:
+        cpus: '1'
+        memory: 1G
+      reservations:
+        cpus: '0.5'
+        memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+networks:
+  rag-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  postgres-data:
+    driver: local
+  langfuse-pg-data:
+    driver: local
+  milvus-data:
+    driver: local
+  etcd-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      o: size=10737418240
+  model-cache:
+    driver: local
+  uploaded-docs:
+    driver: local
+  grafana-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  langfuse-data:
+    driver: local
+  loki-data:
+    driver: local
+  backup-data:
+    driver: local

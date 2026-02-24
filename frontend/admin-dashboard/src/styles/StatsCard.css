@@ -1,0 +1,97 @@
+.stats-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+.stats-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-color);
+}
+
+.stats-icon {
+  font-size: 2rem;
+  min-width: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-card-primary .stats-icon {
+  color: var(--accent-color);
+}
+
+.stats-card-success .stats-icon {
+  color: var(--success-color);
+}
+
+.stats-card-warning .stats-icon {
+  color: var(--warning-color);
+}
+
+.stats-card-danger .stats-icon {
+  color: var(--danger-color);
+}
+
+.stats-content {
+  flex: 1;
+}
+
+.stats-title {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.stats-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.stats-change {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stats-change.positive {
+  color: var(--success-color);
+}
+
+.stats-change.negative {
+  color: var(--danger-color);
+}
+
+.change-arrow {
+  font-weight: bold;
+}
+
+.change-value {
+  font-weight: 600;
+}
+
+.change-label {
+  color: var(--text-secondary);
+  margin-left: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .stats-card {
+    flex-direction: column;
+  }
+
+  .stats-value {
+    font-size: 1.5rem;
+  }
+}

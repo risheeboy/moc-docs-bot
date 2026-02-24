@@ -1,0 +1,290 @@
+/**
+ * Global Styles
+ * Root styles for the chat widget
+ */
+
+:root {
+  --primary-color: #1a56db;
+  --primary-dark: #1e40af;
+  --primary-light: #3b82f6;
+  --secondary-color: #f97316;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  --transition-fast: 150ms;
+  --transition-base: 250ms;
+  --transition-slow: 350ms;
+
+  /* Font stacks */
+  --font-english: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-hindi: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+  --font-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-english);
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.5;
+}
+
+.devanagari {
+  font-family: var(--font-hindi);
+}
+
+.high-contrast {
+  --primary-color: #000080;
+  --primary-dark: #00003d;
+  --primary-light: #0000ff;
+  --gray-900: #000000;
+  --gray-800: #1a1a1a;
+}
+
+.high-contrast body {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.high-contrast a {
+  color: #0000ff;
+  text-decoration: underline;
+}
+
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 1.875rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+h4 {
+  font-size: 1.125rem;
+}
+
+h5 {
+  font-size: 1rem;
+}
+
+h6 {
+  font-size: 0.875rem;
+}
+
+/* Links */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+a:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  transition: all var(--transition-fast);
+}
+
+button:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form elements */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem 0.75rem;
+  transition: border-color var(--transition-fast);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.skip-to-content {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  z-index: 10000;
+  padding: 1rem;
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--border-radius-md);
+}
+
+.skip-to-content:focus {
+  top: 0;
+  left: 0;
+}
+
+/* App root */
+.app-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-english);
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* Print styles */
+@media print {
+  body {
+    background-color: white;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  button,
+  .chat-bubble {
+    display: none;
+  }
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gray-50: #0f172a;
+    --gray-100: #1e293b;
+    --gray-200: #334155;
+    --gray-300: #475569;
+    --gray-400: #64748b;
+    --gray-500: #78716f;
+    --gray-600: #94a3b8;
+    --gray-700: #cbd5e1;
+    --gray-800: #e2e8f0;
+    --gray-900: #f1f5f9;
+  }
+
+  body {
+    background-color: var(--gray-900);
+    color: var(--gray-50);
+  }
+}

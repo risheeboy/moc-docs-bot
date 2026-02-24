@@ -1,0 +1,1640 @@
+openapi: 3.0.0
+info:
+  title: RAG-Based Hindi QA System API
+  description: API Gateway for Ministry of Culture conversational chatbot and semantic search
+  version: 1.0.0
+  contact:
+    name: Ministry of Culture, Government of India
+    email: arit-culture@gov.in
+
+servers:
+  - url: https://culture.gov.in/api/v1
+    description: Production API Gateway
+  - url: http://localhost:8000/api/v1
+    description: Local development API
+
+security:
+  - BearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Service health check endpoint - no authentication required
+      tags:
+        - System
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chat:
+    post:
+      summary: Single-turn chat query
+      description: Send a single query to the chatbot and receive a response with source citations
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Chat response generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat/stream:
+    post:
+      summary: Streaming chat response
+      description: |
+        Stream a chat response in real-time using Server-Sent Events (SSE).
+        Useful for progressive UI rendering of long responses.
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Streaming response started
+          content:
+            text/event-stream:
+              schema:
+                type: object
+                properties:
+                  event:
+                    type: string
+                    enum: [token, sources, complete, error]
+                  data:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /chat/sessions/{session_id}/history:
+    get:
+      summary: Get conversation history
+      description: Retrieve full conversation history for a session
+      tags:
+        - Chat
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique session identifier
+      responses:
+        '200':
+          description: Conversation history retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationHistory'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /chat/sessions/{session_id}/clear:
+    post:
+      summary: Clear conversation history
+      description: Delete all messages in a session (cannot be undone)
+      tags:
+        - Chat
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Session cleared successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /search:
+    post:
+      summary: Unified semantic search
+      description: |
+        Full-text and semantic search across all 30 Ministry platforms.
+        Returns ranked results with AI-generated summaries and multimedia.
+      tags:
+        - Search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Search results returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /search/suggest:
+    get:
+      summary: Search suggestions
+      description: Get auto-complete suggestions based on query prefix
+      tags:
+        - Search
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Query prefix
+        - name: language
+          in: query
+          schema:
+            type: string
+            enum: [hi, en]
+          description: Language code
+      responses:
+        '200':
+          description: Suggestions returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /voice/stt:
+    post:
+      summary: Speech-to-text
+      description: |
+        Convert audio input to text.
+        Supports Hindi and English with automatic language detection.
+      tags:
+        - Voice
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: Audio file (WAV, MP3, WebM, OGG)
+                language:
+                  type: string
+                  enum: [hi, en, auto]
+                  default: auto
+                  description: Language code (auto-detect if not specified)
+              required:
+                - audio
+      responses:
+        '200':
+          description: Transcription successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/STTResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+
+  /voice/tts:
+    post:
+      summary: Text-to-speech
+      description: Convert text to audio in Hindi or English
+      tags:
+        - Voice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TTSRequest'
+      responses:
+        '200':
+          description: Audio generated successfully
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+          headers:
+            X-Duration-Seconds:
+              schema:
+                type: number
+              description: Audio duration in seconds
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /translate:
+    post:
+      summary: Translate text
+      description: |
+        Translate text between Hindi and English.
+        Supports batch translation for efficiency.
+      tags:
+        - Translate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslateRequest'
+      responses:
+        '200':
+          description: Translation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /translate/batch:
+    post:
+      summary: Batch translation
+      description: Translate multiple texts in a single request
+      tags:
+        - Translate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchTranslateRequest'
+      responses:
+        '200':
+          description: Batch translation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchTranslateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /ocr/upload:
+    post:
+      summary: Optical Character Recognition
+      description: |
+        Extract text from images and PDFs in Hindi and English.
+        Returns text with confidence scores and bounding boxes.
+      tags:
+        - OCR
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image or PDF file (PNG, JPG, PDF)
+                languages:
+                  type: string
+                  default: hi,en
+                  description: Comma-separated language codes
+                engine:
+                  type: string
+                  enum: [auto, tesseract, easyocr]
+                  default: auto
+              required:
+                - file
+      responses:
+        '200':
+          description: OCR completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OCRResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+
+  /feedback:
+    post:
+      summary: Submit user feedback
+      description: |
+        Submit feedback on chat response quality, search results, or general experience.
+        Helps improve model performance over time.
+      tags:
+        - Feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+      responses:
+        '201':
+          description: Feedback recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback_id:
+                    type: string
+                    format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /documents/upload:
+    post:
+      summary: Upload document
+      description: |
+        Upload a document for ingestion into the RAG system.
+        Supports PDF, DOCX, PPTX, images.
+      tags:
+        - Documents
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file
+                title:
+                  type: string
+                  description: Human-readable document title
+                source_url:
+                  type: string
+                  format: uri
+                  description: Source URL if scraped from web
+                language:
+                  type: string
+                  enum: [hi, en]
+                  description: Document language
+              required:
+                - file
+                - title
+      responses:
+        '202':
+          description: Document uploaded and queued for ingestion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued, processing, completed, failed]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+
+  /documents:
+    get:
+      summary: List documents
+      description: List all ingested documents with filtering and pagination
+      tags:
+        - Documents
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: source_site
+          in: query
+          schema:
+            type: string
+          description: Filter by source website
+        - name: content_type
+          in: query
+          schema:
+            type: string
+            enum: [webpage, pdf, document, image]
+      responses:
+        '200':
+          description: Document list returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentListResponse'
+
+  /documents/{document_id}:
+    get:
+      summary: Get document details
+      description: Retrieve metadata and content for a specific document
+      tags:
+        - Documents
+      parameters:
+        - name: document_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document details returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /documents/{document_id}/delete:
+    delete:
+      summary: Delete document
+      description: Remove document from RAG system and vector database
+      tags:
+        - Documents
+      parameters:
+        - name: document_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Document deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/ingestion/jobs:
+    post:
+      summary: Trigger data ingestion job
+      description: Start scraping and ingestion for specified Ministry websites
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestionJobRequest'
+      responses:
+        '202':
+          description: Job started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [started, queued]
+                  target_count:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/ingestion/jobs/{job_id}:
+    get:
+      summary: Get ingestion job status
+      description: Check progress of a data ingestion job
+      tags:
+        - Admin
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJobStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/models/finetune:
+    post:
+      summary: Start model fine-tuning job
+      description: Fine-tune an LLM on Ministry QA dataset
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinetuneRequest'
+      responses:
+        '202':
+          description: Fine-tuning job started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  estimated_duration_minutes:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/models/evaluate:
+    post:
+      summary: Evaluate model performance
+      description: Run evaluation metrics on a model using benchmark dataset
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+      responses:
+        '200':
+          description: Evaluation results returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/analytics/conversations:
+    get:
+      summary: Conversation analytics
+      description: Get metrics on conversation volume, duration, languages
+      tags:
+        - Admin
+      parameters:
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Analytics data returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationAnalytics'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/analytics/search:
+    get:
+      summary: Search analytics
+      description: Get metrics on search queries, result quality, performance
+      tags:
+        - Admin
+      parameters:
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Analytics data returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchAnalytics'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/audit-logs:
+    get:
+      summary: Audit log query
+      description: Query system audit logs for compliance and troubleshooting
+      tags:
+        - Admin
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Audit logs returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate with email and password, receive JWT token
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      summary: Refresh JWT token
+      description: Obtain a new access token using a valid refresh token
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: User question in Hindi or English
+        language:
+          type: string
+          enum: [hi, en]
+          description: Query language
+        session_id:
+          type: string
+          format: uuid
+          description: Conversation session ID (optional, generated if not provided)
+        chat_history:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+          description: Previous conversation turns for context
+        top_k:
+          type: integer
+          default: 10
+          minimum: 1
+          maximum: 50
+          description: Number of top documents to retrieve
+        rerank_top_k:
+          type: integer
+          default: 5
+          minimum: 1
+          maximum: 20
+          description: Number of results to return after reranking
+        filters:
+          type: object
+          properties:
+            source_sites:
+              type: array
+              items:
+                type: string
+              description: Filter by source websites (culture.gov.in, asi.nic.in, etc.)
+            content_type:
+              type: string
+              enum: [webpage, pdf, document, image]
+            date_from:
+              type: string
+              format: date
+            date_to:
+              type: string
+              format: date
+      required:
+        - query
+        - language
+
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+          description: Generated chatbot response
+        session_id:
+          type: string
+          format: uuid
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Source'
+          description: Documents used as context
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of the response
+        language:
+          type: string
+          enum: [hi, en]
+        cached:
+          type: boolean
+          description: Whether result was retrieved from cache
+        latency_ms:
+          type: integer
+
+    SearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        language:
+          type: string
+          enum: [hi, en]
+        page:
+          type: integer
+          default: 1
+          minimum: 1
+        page_size:
+          type: integer
+          default: 20
+          minimum: 1
+          maximum: 100
+        filters:
+          type: object
+          properties:
+            source_sites:
+              type: array
+              items:
+                type: string
+            content_type:
+              type: string
+              enum: [webpage, pdf, document, image]
+            date_from:
+              type: string
+              format: date
+            date_to:
+              type: string
+              format: date
+      required:
+        - query
+        - language
+
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        multimedia:
+          type: array
+          items:
+            $ref: '#/components/schemas/MultimediaResult'
+          description: Images and videos matching the query
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          description: Relevant events and announcements
+        total_results:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        cached:
+          type: boolean
+
+    Source:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        snippet:
+          type: string
+          description: Relevant text excerpt from the document
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        source_site:
+          type: string
+        language:
+          type: string
+          enum: [hi, en]
+        content_type:
+          type: string
+        chunk_id:
+          type: string
+        published_date:
+          type: string
+          format: date-time
+
+    SearchResult:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        snippet:
+          type: string
+          description: AI-generated summary
+        score:
+          type: number
+        source_site:
+          type: string
+        language:
+          type: string
+        content_type:
+          type: string
+        thumbnail_url:
+          type: string
+          format: uri
+        published_date:
+          type: string
+          format: date
+
+    MultimediaResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [image, video]
+        url:
+          type: string
+          format: uri
+        alt_text:
+          type: string
+        source_site:
+          type: string
+        thumbnail_url:
+          type: string
+          format: uri
+
+    Event:
+      type: object
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        venue:
+          type: string
+        description:
+          type: string
+        source_url:
+          type: string
+          format: uri
+        language:
+          type: string
+
+    ConversationHistory:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              language:
+                type: string
+
+    STTResponse:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Transcribed text
+        language:
+          type: string
+          enum: [hi, en]
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        duration_seconds:
+          type: number
+          format: float
+
+    TTSRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        language:
+          type: string
+          enum: [hi, en]
+        format:
+          type: string
+          enum: [mp3, wav, ogg]
+          default: mp3
+        voice:
+          type: string
+          default: default
+      required:
+        - text
+        - language
+
+    TranslateRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        source_language:
+          type: string
+          enum: [hi, en]
+        target_language:
+          type: string
+          enum: [hi, en]
+      required:
+        - text
+        - source_language
+        - target_language
+
+    TranslateResponse:
+      type: object
+      properties:
+        translated_text:
+          type: string
+        source_language:
+          type: string
+        target_language:
+          type: string
+        cached:
+          type: boolean
+
+    BatchTranslateRequest:
+      type: object
+      properties:
+        texts:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+        source_language:
+          type: string
+          enum: [hi, en]
+        target_language:
+          type: string
+          enum: [hi, en]
+      required:
+        - texts
+        - source_language
+        - target_language
+
+    BatchTranslateResponse:
+      type: object
+      properties:
+        translations:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              cached:
+                type: boolean
+        source_language:
+          type: string
+        target_language:
+          type: string
+
+    OCRResponse:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Full extracted text
+        pages:
+          type: array
+          items:
+            type: object
+            properties:
+              page_number:
+                type: integer
+              text:
+                type: string
+              regions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    bounding_box:
+                      type: array
+                      items:
+                        type: number
+                      minItems: 4
+                      maxItems: 4
+                    confidence:
+                      type: number
+                    type:
+                      type: string
+        language:
+          type: string
+        engine_used:
+          type: string
+        confidence:
+          type: number
+
+    FeedbackRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Response quality rating
+        feedback_type:
+          type: string
+          enum: [accuracy, relevance, completeness, language_quality, other]
+        comment:
+          type: string
+          maxLength: 1000
+      required:
+        - session_id
+        - message_id
+        - rating
+
+    DocumentListResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentSummary'
+
+    DocumentSummary:
+      type: object
+      properties:
+        document_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        source_url:
+          type: string
+        source_site:
+          type: string
+        content_type:
+          type: string
+        language:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        chunk_count:
+          type: integer
+
+    DocumentDetail:
+      allOf:
+        - $ref: '#/components/schemas/DocumentSummary'
+        - type: object
+          properties:
+            content:
+              type: string
+            metadata:
+              type: object
+            images:
+              type: array
+              items:
+                type: object
+
+    IngestionJobRequest:
+      type: object
+      properties:
+        target_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 1
+          description: Ministry websites to scrape
+        spider_type:
+          type: string
+          enum: [auto, culture, asi, sangeet-nrityam, library]
+          default: auto
+        force_rescrape:
+          type: boolean
+          default: false
+          description: Re-scrape even if already ingested
+      required:
+        - target_urls
+
+    IngestionJobStatus:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+        progress:
+          type: object
+          properties:
+            pages_crawled:
+              type: integer
+            pages_total:
+              type: integer
+            documents_ingested:
+              type: integer
+            errors:
+              type: integer
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        elapsed_seconds:
+          type: integer
+
+    FinetuneRequest:
+      type: object
+      properties:
+        base_model:
+          type: string
+          enum:
+            - meta-llama/Llama-3.1-8B-Instruct-AWQ
+            - mistralai/Mistral-NeMo-Instruct-2407-AWQ
+          description: Model to fine-tune
+        dataset_path:
+          type: string
+          description: S3 path to training dataset (JSONL format)
+        hyperparameters:
+          type: object
+          properties:
+            lora_rank:
+              type: integer
+              default: 16
+            lora_alpha:
+              type: integer
+              default: 32
+            learning_rate:
+              type: number
+              default: 0.0002
+            epochs:
+              type: integer
+              default: 3
+            batch_size:
+              type: integer
+              default: 4
+      required:
+        - base_model
+        - dataset_path
+
+    EvaluationRequest:
+      type: object
+      properties:
+        model_version:
+          type: string
+          description: Model version to evaluate
+        eval_dataset:
+          type: string
+          description: S3 path to evaluation dataset
+        metrics:
+          type: array
+          items:
+            type: string
+            enum:
+              - exact_match
+              - f1
+              - bleu
+              - ndcg
+              - hallucination_rate
+              - llm_judge_score
+      required:
+        - model_version
+        - eval_dataset
+
+    EvaluationResult:
+      type: object
+      properties:
+        model_version:
+          type: string
+        results:
+          type: object
+          additionalProperties:
+            type: number
+        eval_samples:
+          type: integer
+        evaluated_at:
+          type: string
+          format: date-time
+
+    ConversationAnalytics:
+      type: object
+      properties:
+        total_conversations:
+          type: integer
+        total_turns:
+          type: integer
+        average_turns_per_conversation:
+          type: number
+        average_response_time_ms:
+          type: number
+        language_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        top_queries:
+          type: array
+          items:
+            type: object
+            properties:
+              query:
+                type: string
+              count:
+                type: integer
+        user_satisfaction:
+          type: object
+          properties:
+            avg_rating:
+              type: number
+            total_ratings:
+              type: integer
+
+    SearchAnalytics:
+      type: object
+      properties:
+        total_searches:
+          type: integer
+        unique_users:
+          type: integer
+        average_result_count:
+          type: number
+        average_response_time_ms:
+          type: number
+        top_search_terms:
+          type: array
+          items:
+            type: object
+            properties:
+              term:
+                type: string
+              count:
+                type: integer
+        results_by_content_type:
+          type: object
+          additionalProperties:
+            type: integer
+
+    AuditLogResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              action:
+                type: string
+              user_id:
+                type: string
+              resource:
+                type: string
+              details:
+                type: object
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        service:
+          type: string
+        version:
+          type: string
+        uptime_seconds:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        dependencies:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+              latency_ms:
+                type: number
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Token expiration in seconds
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - INVALID_REQUEST
+                - INVALID_LANGUAGE
+                - INVALID_AUDIO_FORMAT
+                - UNAUTHORIZED
+                - TOKEN_EXPIRED
+                - FORBIDDEN
+                - API_KEY_REVOKED
+                - NOT_FOUND
+                - DUPLICATE
+                - PAYLOAD_TOO_LARGE
+                - PROCESSING_FAILED
+                - RATE_LIMIT_EXCEEDED
+                - INTERNAL_ERROR
+                - UPSTREAM_ERROR
+                - SERVICE_UNAVAILABLE
+                - MODEL_LOADING
+                - UPSTREAM_TIMEOUT
+            message:
+              type: string
+            details:
+              type: object
+            request_id:
+              type: string
+              format: uuid
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Authenticated but insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    PayloadTooLarge:
+      description: Request body or file too large
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ServiceUnavailable:
+      description: Service temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+
+tags:
+  - name: System
+    description: System health and diagnostics
+  - name: Chat
+    description: Conversational chatbot endpoints
+  - name: Search
+    description: Semantic search endpoints
+  - name: Voice
+    description: Speech processing (STT/TTS)
+  - name: Translate
+    description: Translation services
+  - name: OCR
+    description: Optical character recognition
+  - name: Feedback
+    description: User feedback collection
+  - name: Documents
+    description: Document management
+  - name: Admin
+    description: Administrative operations (requires admin/editor role)
+  - name: Auth
+    description: Authentication and authorization

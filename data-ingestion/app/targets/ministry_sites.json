@@ -1,0 +1,316 @@
+{
+  "sites": [
+    {
+      "id": "culture-main",
+      "name": "Ministry of Culture - Main Site",
+      "base_url": "https://culture.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content, #main-content",
+        "title": "h1, h2, .page-title",
+        "exclude": "nav, footer, .sidebar, .advertisement"
+      },
+      "exclude_patterns": [
+        "/login",
+        "/admin",
+        "/search\\?",
+        "\\.(pdf|xlsx|docx|zip)$"
+      ]
+    },
+    {
+      "id": "indianculture-portal",
+      "name": "Indian Culture Portal",
+      "base_url": "https://indianculture.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, .content, article"
+      }
+    },
+    {
+      "id": "manuscripts-graphics",
+      "name": "Manuscripts & Graphics Division",
+      "base_url": "https://mgmd.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 48,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "vedic-heritage",
+      "name": "Vedic Heritage Portal",
+      "base_url": "https://vedicheritage.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 48,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "museums-of-india",
+      "name": "Museums of India",
+      "base_url": "https://museumsofindia.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "gyan-bharatam",
+      "name": "Gyan Bharatam - Knowledge Platform",
+      "base_url": "https://gyanbharatam.com",
+      "spider_type": "dynamic",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": ".content, article, main"
+      }
+    },
+    {
+      "id": "abhilekh-patal",
+      "name": "Abhilekh-Patal - Archival System",
+      "base_url": "https://abhilekh-patal.in",
+      "spider_type": "dynamic",
+      "enabled": true,
+      "scrape_interval_hours": 48,
+      "content_selectors": {
+        "main_content": ".content, article, main"
+      }
+    },
+    {
+      "id": "asi",
+      "name": "Archaeological Survey of India",
+      "base_url": "https://asi.nic.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "national-museum",
+      "name": "National Museum of India",
+      "base_url": "https://nationalmuseumindia.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "sangeet-natak-akademi",
+      "name": "Sangeet Natak Akademi",
+      "base_url": "https://sangeetnatak.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "sahitya-akademi",
+      "name": "Sahitya Akademi",
+      "base_url": "https://sahitya-akademi.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "ignca",
+      "name": "Indira Gandhi National Centre for the Arts",
+      "base_url": "https://ignca.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "national-archives",
+      "name": "National Archives of India",
+      "base_url": "https://nationalarchives.nic.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 48,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "ngma",
+      "name": "National Gallery of Modern Art",
+      "base_url": "https://ngmaindia.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "nehru-memorial",
+      "name": "Nehru Memorial Museum & Library",
+      "base_url": "https://nmml.nic.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "india-culture-gov",
+      "name": "India Culture Portal (Alternative)",
+      "base_url": "https://indiaculture.gov.in",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 24,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "ccim",
+      "name": "Consortium for Cultural and International Matters",
+      "base_url": "https://ccimindia.org",
+      "spider_type": "static",
+      "enabled": true,
+      "scrape_interval_hours": 48,
+      "content_selectors": {
+        "main_content": "main, article, .content"
+      }
+    },
+    {
+      "id": "tbd-18",
+      "name": "TBD Site 18 (From Ministry Annexure)",
+      "base_url": "https://placeholder-18.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-19",
+      "name": "TBD Site 19 (From Ministry Annexure)",
+      "base_url": "https://placeholder-19.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-20",
+      "name": "TBD Site 20 (From Ministry Annexure)",
+      "base_url": "https://placeholder-20.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-21",
+      "name": "TBD Site 21 (From Ministry Annexure)",
+      "base_url": "https://placeholder-21.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-22",
+      "name": "TBD Site 22 (From Ministry Annexure)",
+      "base_url": "https://placeholder-22.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-23",
+      "name": "TBD Site 23 (From Ministry Annexure)",
+      "base_url": "https://placeholder-23.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-24",
+      "name": "TBD Site 24 (From Ministry Annexure)",
+      "base_url": "https://placeholder-24.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-25",
+      "name": "TBD Site 25 (From Ministry Annexure)",
+      "base_url": "https://placeholder-25.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-26",
+      "name": "TBD Site 26 (From Ministry Annexure)",
+      "base_url": "https://placeholder-26.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-27",
+      "name": "TBD Site 27 (From Ministry Annexure)",
+      "base_url": "https://placeholder-27.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-28",
+      "name": "TBD Site 28 (From Ministry Annexure)",
+      "base_url": "https://placeholder-28.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-29",
+      "name": "TBD Site 29 (From Ministry Annexure)",
+      "base_url": "https://placeholder-29.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    },
+    {
+      "id": "tbd-30",
+      "name": "TBD Site 30 (From Ministry Annexure)",
+      "base_url": "https://placeholder-30.gov.in",
+      "spider_type": "static",
+      "enabled": false,
+      "scrape_interval_hours": 24,
+      "content_selectors": {}
+    }
+  ]
+}

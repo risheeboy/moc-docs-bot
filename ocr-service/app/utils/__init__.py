@@ -1,0 +1,1 @@
+"""Utilities for OCR Service."""

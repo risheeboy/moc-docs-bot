@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  ocr-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ocr-service:latest
+    container_name: ocr-service
+    ports:
+      - "8005:8005"
+    environment:
+      # Application
+      APP_ENV: development
+      APP_DEBUG: "false"
+      APP_LOG_LEVEL: INFO
+
+      # OCR Engines
+      OCR_TESSERACT_LANG: hin+eng
+      OCR_EASYOCR_LANGS: hi,en
+
+      # Preprocessing
+      OCR_ENABLE_PREPROCESSING: "true"
+      OCR_DESKEW_ENABLED: "true"
+      OCR_DENOISE_ENABLED: "true"
+      OCR_BINARIZE_ENABLED: "true"
+
+      # Size and DPI
+      OCR_MAX_IMAGE_SIZE_MB: "50"
+      OCR_MAX_PDF_PAGES: "500"
+      OCR_TARGET_DPI: "300"
+
+      # Timeouts
+      OCR_OCR_TIMEOUT_SECONDS: "300"
+      OCR_PDF_EXTRACTION_TIMEOUT_SECONDS: "120"
+
+      # Batch
+      OCR_MAX_BATCH_SIZE: "100"
+      OCR_BATCH_TIMEOUT_SECONDS: "600"
+
+    volumes:
+      # Mount for model cache (optional, for faster subsequent runs)
+      - ocr-model-cache:/tmp/ocr_models
+
+      # Mount source code for development (optional)
+      - ./app:/app/app
+
+    networks:
+      - rag-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    restart: unless-stopped
+
+    labels:
+      - "com.ragqa.service=ocr-service"
+      - "com.ragqa.version=1.0.0"
+      - "com.ragqa.stream=7"
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  ocr-model-cache:
+    driver: local

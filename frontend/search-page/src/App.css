@@ -1,0 +1,23 @@
+.app {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app[data-language='hi'] {
+  font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+}
+
+.app[data-language='en'] {
+  font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+}
+
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.2rem;
+  color: #666;
+}

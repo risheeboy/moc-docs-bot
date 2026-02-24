@@ -1,0 +1,139 @@
+.feedback {
+  width: 100%;
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.feedback-header h1 {
+  margin: 0;
+}
+
+.period-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.period-selector label {
+  margin-bottom: 0;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.period-selector select {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.sentiment-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.stat-card h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-unit,
+.stat-percent {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.stat-card.positive {
+  border-color: var(--success-color);
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+.stat-card.positive .stat-value {
+  color: var(--success-color);
+}
+
+.stat-card.negative {
+  border-color: var(--danger-color);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.stat-card.negative .stat-value {
+  color: var(--danger-color);
+}
+
+.stat-card.neutral {
+  border-color: var(--warning-color);
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+.stat-card.neutral .stat-value {
+  color: var(--warning-color);
+}
+
+.feedback-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .feedback-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .period-selector {
+    width: 100%;
+  }
+
+  .period-selector select {
+    flex: 1;
+  }
+
+  .sentiment-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .feedback-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .sentiment-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+}

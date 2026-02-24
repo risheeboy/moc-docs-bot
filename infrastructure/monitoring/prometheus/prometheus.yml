@@ -1,0 +1,263 @@
+# ============================================================================
+# Prometheus Configuration
+# RAG-Based Hindi QA System Monitoring
+# ============================================================================
+
+global:
+  scrape_interval: 15s                          # How often to scrape targets by default
+  evaluation_interval: 15s                      # How often to evaluate rules
+  external_labels:
+    monitor: 'rag-qa-system'
+    environment: 'production'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load rules for alerting
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+
+scrape_configs:
+  # ============================================================================
+  # NGINX
+  # ============================================================================
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ============================================================================
+  # API GATEWAY
+  # ============================================================================
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'api-gateway'
+
+  # ============================================================================
+  # RAG SERVICE
+  # ============================================================================
+  - job_name: 'rag-service'
+    static_configs:
+      - targets: ['rag-service:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'rag-service'
+
+  # ============================================================================
+  # LLM SERVICE (vLLM metrics)
+  # ============================================================================
+  - job_name: 'llm-service'
+    static_configs:
+      - targets: ['llm-service:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'llm-service'
+
+  # ============================================================================
+  # SPEECH SERVICE
+  # ============================================================================
+  - job_name: 'speech-service'
+    static_configs:
+      - targets: ['speech-service:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'speech-service'
+
+  # ============================================================================
+  # TRANSLATION SERVICE
+  # ============================================================================
+  - job_name: 'translation-service'
+    static_configs:
+      - targets: ['translation-service:8004']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'translation-service'
+
+  # ============================================================================
+  # OCR SERVICE
+  # ============================================================================
+  - job_name: 'ocr-service'
+    static_configs:
+      - targets: ['ocr-service:8005']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'ocr-service'
+
+  # ============================================================================
+  # DATA INGESTION
+  # ============================================================================
+  - job_name: 'data-ingestion'
+    static_configs:
+      - targets: ['data-ingestion:8006']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'data-ingestion'
+
+  # ============================================================================
+  # MODEL TRAINING
+  # ============================================================================
+  - job_name: 'model-training'
+    static_configs:
+      - targets: ['model-training:8007']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'model-training'
+
+  # ============================================================================
+  # POSTGRESQL (main database)
+  # ============================================================================
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 60s
+    scrape_timeout: 10s
+
+  # ============================================================================
+  # REDIS
+  # ============================================================================
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ============================================================================
+  # MILVUS (Vector Database)
+  # ============================================================================
+  - job_name: 'milvus'
+    static_configs:
+      - targets: ['milvus:9091']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'milvus'
+
+  # ============================================================================
+  # MINIO (Object Storage)
+  # ============================================================================
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    metrics_path: '/minio/v2/metrics/cluster'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    scheme: http
+
+  # ============================================================================
+  # NVIDIA DCGM EXPORTER (GPU Monitoring)
+  # ============================================================================
+  - job_name: 'dcgm-exporter'
+    static_configs:
+      - targets: ['dcgm-exporter:9400']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'gpu-monitor'
+
+  # GPU metrics specific scrape
+  - job_name: 'gpu-metrics'
+    static_configs:
+      - targets: ['dcgm-exporter:9400']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metric_relabel_configs:
+      # Keep GPU-specific metrics
+      - source_labels: [__name__]
+        regex: 'DCGM_FI_DEV_.*'
+        action: keep
+
+  # ============================================================================
+  # ETCD (Milvus Metadata Store)
+  # ============================================================================
+  - job_name: 'etcd'
+    static_configs:
+      - targets: ['etcd:2379']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+
+  # ============================================================================
+  # PROMETHEUS SELF-MONITORING
+  # ============================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ============================================================================
+  # GRAFANA
+  # ============================================================================
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+
+  # ============================================================================
+  # LANGFUSE (LLM Observability)
+  # ============================================================================
+  - job_name: 'langfuse'
+    static_configs:
+      - targets: ['langfuse:3001']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+
+  # ============================================================================
+  # LOKI (Log Aggregation)
+  # ============================================================================
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s

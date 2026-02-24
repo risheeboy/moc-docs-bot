@@ -1,0 +1,138 @@
+ADMIN DASHBOARD - FILES INDEX
+Ministry of Culture RAG System - Stream 09 Implementation
+Location: /sessions/amazing-wizardly-wright/mnt/rag-qa-hindi/frontend/admin-dashboard/
+
+========== CONFIGURATION & BUILD FILES ==========
+package.json                 - NPM dependencies and scripts
+tsconfig.json               - TypeScript compiler configuration
+vite.config.ts              - Vite build configuration
+index.html                  - HTML entry point
+Dockerfile                  - Multi-stage Docker build
+nginx.conf                  - Production Nginx configuration
+.env.example                - Environment variables template
+.gitignore                  - Git ignore rules
+
+========== DOCUMENTATION ==========
+README.md                   - Comprehensive user documentation
+MANIFEST.md                 - Complete file inventory
+FILES_INDEX.txt             - This file
+
+========== SOURCE CODE - MAIN APPLICATION ==========
+src/main.tsx                - React DOM entry point
+src/App.tsx                 - Root component with routing
+
+========== SOURCE CODE - TYPE DEFINITIONS ==========
+src/types/index.ts          - Complete TypeScript interfaces (snake_case)
+
+========== SOURCE CODE - SERVICES & API ==========
+src/services/api.ts         - Axios API client with JWT auth
+
+========== SOURCE CODE - CUSTOM HOOKS ==========
+src/hooks/useAuth.ts        - JWT authentication state management
+src/hooks/useAnalytics.ts   - Analytics data fetching with period selection
+
+========== SOURCE CODE - LAYOUT & CORE COMPONENTS ==========
+src/components/Layout.tsx           - Main layout with sidebar and header
+src/components/ProtectedRoute.tsx   - Admin-only route guard
+src/components/StatsCard.tsx        - KPI stat card component
+src/components/ChartWrapper.tsx     - Reusable chart container
+src/components/DocumentUploader.tsx - Drag-and-drop file uploader
+src/components/DataTable.tsx        - Generic data table with pagination
+
+========== SOURCE CODE - PAGES (9 pages) ==========
+src/pages/Login.tsx              - JWT authentication login page
+src/pages/Dashboard.tsx          - KPI overview dashboard
+src/pages/Analytics.tsx          - Multi-chart analytics
+src/pages/Documents.tsx          - Document management
+src/pages/ScrapeJobs.tsx         - Web scraping job control
+src/pages/Conversations.tsx      - Conversation browser
+src/pages/Feedback.tsx           - Sentiment analysis
+src/pages/SystemConfig.tsx       - System configuration
+src/pages/ModelMonitoring.tsx    - Langfuse integration
+
+========== SOURCE CODE - AUDIT ==========
+src/pages/AuditLog.tsx           - Searchable audit trail
+
+========== STYLES - GLOBAL ==========
+src/styles/globals.css           - Global CSS variables and defaults
+
+========== STYLES - LAYOUT & PAGES ==========
+src/styles/Layout.css            - Layout and navigation styling
+src/styles/Login.css             - Login page styling
+src/styles/Dashboard.css         - Dashboard styling
+src/styles/Analytics.css         - Analytics page styling
+src/styles/Documents.css         - Documents page styling
+src/styles/ScrapeJobs.css        - Scrape jobs page styling
+src/styles/Conversations.css     - Conversations page styling
+src/styles/Feedback.css          - Feedback page styling
+src/styles/SystemConfig.css      - System config page styling
+src/styles/ModelMonitoring.css   - Model monitoring page styling
+src/styles/AuditLog.css          - Audit log page styling
+
+========== STYLES - COMPONENTS ==========
+src/styles/StatsCard.css         - Stats card component styling
+src/styles/ChartWrapper.css      - Chart wrapper component styling
+src/styles/DataTable.css         - Data table component styling
+src/styles/DocumentUploader.css  - Document uploader styling
+
+========== TESTS ==========
+tests/Dashboard.test.tsx         - Dashboard component unit tests (Vitest + RTL)
+
+========== STATISTICS ==========
+Total Files:        49
+TypeScript Files:   23 (App, pages, components, hooks, api, types, tests)
+CSS Files:          14 (global + 13 specific styles)
+Configuration:      8
+Documentation:      3
+
+Total Lines of Code: ~5,300+ (TypeScript + CSS)
+
+========== QUICK REFERENCE ==========
+
+Development:
+  npm install
+  npm run dev              # http://localhost:5173
+
+Production:
+  npm run build            # Creates dist/
+  docker build -t admin-dashboard:1.0.0 .
+  docker run -p 80:80 admin-dashboard:1.0.0
+
+API Base URL: /api/v1
+Auth: JWT stored in localStorage
+Convention: snake_case field names
+TypeScript: Strict mode enabled
+
+========== KEY FEATURES ==========
+
+1. Dashboard:       Real-time KPIs (query volume, response time, sessions, satisfaction)
+2. Analytics:       Language dist, topic dist, model usage, satisfaction trends
+3. Documents:       Upload, manage, delete documents with status tracking
+4. Scrape Jobs:     Trigger and monitor web scraping for 30 Ministry sites
+5. Conversations:   Browse and search user conversation sessions
+6. Feedback:        Sentiment analysis with pie and bar charts
+7. System Config:   Manage RAG, LLM, session settings and feature flags
+8. Model Monitor:   Langfuse integration for per-model metrics
+9. Audit Log:       Searchable admin activity tracking
+
+========== COMPLIANCE ==========
+
+✓ React 18 + TypeScript 5.6+
+✓ Vite 6 build system
+✓ Recharts for data visualization
+✓ React Router v7 for navigation
+✓ @tanstack/react-table for data display
+✓ JWT authentication
+✓ Responsive design (mobile-first)
+✓ Production Docker deployment
+✓ TypeScript strict mode
+✓ Error handling per shared contracts
+✓ snake_case field names
+✓ Admin-only access control
+
+========== CONTACT ==========
+
+For support: arit-culture@gov.in
+Repository: Ministry of Culture RAG System
+Implementation: Stream 09 - Admin Dashboard
+Date: February 24, 2026

@@ -1,0 +1,21 @@
+# Shared dependencies (pinned versions from §14 of 01_Shared_Contracts.md)
+python-multipart==0.0.18
+fastapi==0.115.*
+uvicorn[standard]==0.34.*
+pydantic==2.10.*
+pydantic-settings==2.7.*
+httpx==0.28.*
+structlog==24.4.*
+prometheus-client==0.21.*
+
+# OCR-specific dependencies
+pytesseract==0.3.10
+easyocr==1.7.1
+pdf2image==1.16.3
+pillow==11.2.0
+opencv-python==4.10.1.26
+numpy==1.26.4
+scipy==1.14.1
+
+# Utilities
+python-jose[cryptography]==3.3.*

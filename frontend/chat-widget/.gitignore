@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Production
+dist/
+build/
+
+# Misc
+.DS_Store
+*.pem
+*.key
+*.crt
+
+# Logs
+logs/
+*.log
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS
+Thumbs.db
+
+# Environment
+.env
+.env.development
+.env.production

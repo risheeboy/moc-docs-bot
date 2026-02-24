@@ -1,0 +1,37 @@
+# Shared dependencies (pinned versions from spec)
+python-multipart==0.0.18
+fastapi==0.115.0
+uvicorn[standard]==0.34.0
+pydantic==2.10.0
+pydantic-settings==2.7.0
+httpx==0.28.0
+structlog==24.4.0
+prometheus-client==0.21.0
+
+# Speech-specific dependencies
+# IndicConformer for STT
+librosa==0.10.1
+numpy==1.26.3
+scipy==1.11.4
+soundfile==0.12.1
+torch==2.1.2+cu121  # Will match nvidia/cuda:12.1 base image
+torchaudio==2.1.2+cu121
+transformers==4.39.0
+silero-vad==5.1  # Voice Activity Detection for preprocessing
+
+# AI4Bharat models (IndicConformer)
+# Models are downloaded at runtime from HuggingFace
+
+# IndicTTS and Coqui TTS
+glow-tts==1.1
+espeak-ng-python==1.50.0  # For phoneme generation
+piper-tts==1.2.0  # Alternative/supplementary TTS
+# Coqui TTS via transformers integration
+
+# Audio processing
+pydub==0.25.1
+ffmpeg-python==0.2.1
+
+# Additional utilities
+python-dotenv==1.0.0
+requests==2.31.0
