@@ -1,7 +1,7 @@
 {
   "name": "rag-qa-search-page",
   "version": "1.0.0",
-  "description": "Unified Semantic Search Page for Ministry of Culture RAG QA System",
+  "description": "Unified Semantic Search Page for Ministry of Culture RAG Search & QA System",
   "type": "module",
   "scripts": {
     "dev": "vite",

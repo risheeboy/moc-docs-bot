@@ -18,18 +18,18 @@ class Settings(BaseSettings):
     milvus_collection_text: str = os.getenv("MILVUS_COLLECTION_TEXT", "ministry_text")
     milvus_collection_image: str = os.getenv("MILVUS_COLLECTION_IMAGE", "ministry_images")
 
-    # Redis
+    # Redis/ElastiCache
     redis_host: str = os.getenv("REDIS_HOST", "redis")
     redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
     redis_password: Optional[str] = os.getenv("REDIS_PASSWORD")
+    redis_ssl: bool = os.getenv("REDIS_SSL", "false").lower() == "true"
     redis_db_cache: int = int(os.getenv("REDIS_DB_CACHE", "0"))
 
-    # MinIO
-    minio_endpoint: str = os.getenv("MINIO_ENDPOINT", "minio:9000")
-    minio_access_key: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-    minio_secret_key: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-    minio_bucket_documents: str = os.getenv("MINIO_BUCKET_DOCUMENTS", "documents")
-    minio_use_ssl: bool = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+    # AWS S3
+    aws_default_region: str = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+    aws_s3_bucket_documents: str = os.getenv("AWS_S3_BUCKET_DOCUMENTS", "ragqa-documents")
+    aws_s3_bucket_models: str = os.getenv("AWS_S3_BUCKET_MODELS", "ragqa-models")
+    aws_s3_bucket_backups: str = os.getenv("AWS_S3_BUCKET_BACKUPS", "ragqa-backups")
 
     # RAG Configuration
     rag_embedding_model: str = os.getenv("RAG_EMBEDDING_MODEL", "BAAI/bge-m3")

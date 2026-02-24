@@ -1,0 +1,55 @@
+# Project Configuration
+project_name = "ragqa"
+environment  = "production"
+aws_region   = "ap-south-1"
+
+# Domain Configuration (required for HTTPS)
+# Make sure this domain has a validated ACM certificate in the region
+domain_name = "ragqa.example.com"
+
+# VPC Configuration
+vpc_cidr              = "10.0.0.0/16"
+public_subnet_1_cidr  = "10.0.1.0/24"
+public_subnet_2_cidr  = "10.0.2.0/24"
+private_subnet_1_cidr = "10.0.10.0/24"
+private_subnet_2_cidr = "10.0.11.0/24"
+
+# Database Configuration
+db_instance_class         = "db.r6g.large"   # Multi-AZ, ARM-based
+db_allocated_storage      = 100              # 100 GB initial
+db_backup_retention_days  = 7
+rds_backup_window         = "03:00-04:00"    # UTC
+rds_maintenance_window    = "sun:04:30-sun:05:30"
+
+# Cache Configuration
+cache_instance_type         = "cache.r6g.large" # ARM-based
+redis_snapshot_retention_days = 5
+
+# GPU Configuration (for LLM, Speech, Translation, Model Training)
+gpu_instance_type   = "g5.2xlarge"  # 1 GPU, suitable for inference and training
+min_gpu_instances   = 1
+max_gpu_instances   = 4
+
+# Storage Configuration
+s3_lifecycle_transition_days = 90   # Move to Infrequent Access after 90 days
+s3_lifecycle_glacier_days    = 365  # Move to Glacier after 365 days
+
+# ECR Configuration
+ecr_image_retention_count = 10
+
+# CloudWatch Configuration
+cloudwatch_log_retention_days = 30
+
+# Network Configuration
+enable_nat_gateway = true  # Enable NAT Gateway for private subnet outbound access
+enable_flow_logs   = true  # Enable VPC Flow Logs for debugging
+
+# Security Configuration
+enable_deletion_protection = true  # Prevent accidental deletion of RDS and ALB
+
+# Additional Tags
+tags = {
+  CostCenter = "Engineering"
+  Team       = "Data"
+  Owner      = "Platform"
+}

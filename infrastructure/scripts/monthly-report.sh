@@ -47,7 +47,7 @@ cat > "$REPORT_FILE" << EOF
 
 ## Executive Summary
 
-Monthly performance report for the RAG-Based Hindi QA System deployed at the Ministry of Culture.
+Monthly performance report for the RAG-Based Hindi & English, Search & QA System deployed at the Ministry of Culture.
 
 ---
 

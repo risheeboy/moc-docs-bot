@@ -197,7 +197,7 @@ class TestDocumentLifecycle:
                 {
                     "url": "https://example.com/img.jpg",
                     "alt_text": "Test image",
-                    "minio_path": "documents/img_001.jpg",
+                    "s3_path": "documents/img_001.jpg",
                 }
             ],
         }

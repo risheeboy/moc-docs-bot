@@ -19,7 +19,7 @@
 | SQLAlchemy | 2.0.* | MIT | ✓ Approved |
 | Langfuse | 2.56.* | MIT | ✓ Approved |
 | Pymilvus | 2.4.* | Apache 2.0 | ✓ Approved |
-| MinIO | 7.2.* | Apache 2.0 | ✓ Approved |
+| S3 | 7.2.* | Apache 2.0 | ✓ Approved |
 | Redis | 5.2.* | BSD-3-Clause | ✓ Approved |
 | Httpx | 0.28.* | BSD-3-Clause | ✓ Approved |
 | Structlog | 24.4.* | Apache 2.0 | ✓ Approved |
@@ -64,7 +64,7 @@
 | PostgreSQL | 16-alpine | PostgreSQL License | ✓ Approved |
 | Redis | 7-alpine | BSD-3-Clause | ✓ Approved |
 | Milvus | latest | AGPL-3.0 | ⚠️ See notes |
-| MinIO | latest | AGPL-3.0 | ⚠️ See notes |
+| S3 | latest | AGPL-3.0 | ⚠️ See notes |
 | Prometheus | latest | Apache 2.0 | ✓ Approved |
 | Grafana | latest | AGPL-3.0 | ⚠️ See notes |
 | Langfuse | latest | MIT | ✓ Approved |
@@ -87,7 +87,7 @@
 
 ### AGPL-3.0 Components
 
-**Milvus, MinIO, Grafana, Loki** use AGPL-3.0 license.
+**Milvus, S3, Grafana, Loki** use AGPL-3.0 license.
 
 **AGPL Requirement:** If these services are accessed over the network, the Ministry must make the complete source code available (either publicly or internally).
 

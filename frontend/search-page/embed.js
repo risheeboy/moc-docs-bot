@@ -14,7 +14,7 @@
         options.placeholder || 'Search Ministry of Culture...'
       this.minChars = options.minChars || 3
       this.maxSuggestions = options.maxSuggestions || 5
-      this.language = options.language || 'en'
+      this.language = options.language || 'hi'
 
       this.init()
     }
@@ -242,7 +242,7 @@
     if (document.getElementById('rag-search-bar')) {
       window.ragSearchBar = new EmbeddableSearchBar({
         container: 'rag-search-bar',
-        language: document.documentElement.lang || 'en',
+        language: document.documentElement.lang || 'hi',
       })
     }
   })

@@ -1,0 +1,75 @@
+{
+  "family": "ragqa-langfuse",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "containerDefinitions": [
+    {
+      "name": "langfuse",
+      "image": "langfuse/langfuse:latest",
+      "portMappings": [
+        {
+          "containerPort": 3001,
+          "hostPort": 3001,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "NEXTAUTH_URL",
+          "value": "http://langfuse.ragqa.local:3001"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "ap-south-1"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "${SECRET_ARN_PREFIX}langfuse-database-url"
+        },
+        {
+          "name": "NEXTAUTH_SECRET",
+          "valueFrom": "${SECRET_ARN_PREFIX}langfuse-nextauth-secret"
+        },
+        {
+          "name": "SALT",
+          "valueFrom": "${SECRET_ARN_PREFIX}langfuse-salt"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ragqa-langfuse",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://localhost:3001/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ],
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "tags": [
+    {
+      "key": "Service",
+      "value": "langfuse"
+    },
+    {
+      "key": "Component",
+      "value": "monitoring"
+    }
+  ]
+}

@@ -67,7 +67,6 @@ echo ""
 echo "VECTOR & METADATA STORES:"
 check_service "Milvus" "milvus" "19530" "tcp"
 check_service "etcd" "etcd" "2379" "tcp"
-check_service "MinIO" "minio" "9000" "tcp"
 
 # ============================================================================
 # CORE SERVICES
@@ -141,17 +140,17 @@ else
     HEALTH_WARN=$((HEALTH_WARN + 1))
 fi
 
-# Check MinIO connectivity
-echo -n "MinIO connectivity... "
+# Check S3 connectivity
+echo -n "S3 connectivity... "
 if timeout 5 python3 -c "
-from minio import Minio
-client = Minio('minio:9000', access_key='${MINIO_ACCESS_KEY}', secret_key='${MINIO_SECRET_KEY}', secure=False)
-client.bucket_exists('documents')
+import boto3
+client = boto3.client('s3', region_name='${AWS_DEFAULT_REGION:-ap-south-1}', aws_access_key_id='${AWS_ACCESS_KEY_ID}', aws_secret_access_key='${AWS_SECRET_ACCESS_KEY}')
+client.list_buckets()
 " 2>/dev/null; then
     echo -e "${GREEN}✓${NC}"
     HEALTH_OK=$((HEALTH_OK + 1))
 else
-    echo -e "${YELLOW}⚠ Check manually${NC} (minio may not be ready)"
+    echo -e "${YELLOW}⚠ Check manually${NC} (S3 may not be accessible)"
     HEALTH_WARN=$((HEALTH_WARN + 1))
 fi
 

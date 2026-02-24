@@ -27,17 +27,28 @@ class TranslationCache:
         self._connected = False
 
     async def connect(self):
-        """Connect to Redis"""
+        """Connect to Redis/ElastiCache"""
         if self._connected:
             return
 
         try:
-            self.redis = aioredis.from_url(
-                f"redis://{settings.redis_host}:{settings.redis_port}/{settings.redis_db_translation}",
-                password=settings.redis_password if settings.redis_password else None,
-                encoding="utf8",
-                decode_responses=True,
-            )
+            # Build Redis URL with SSL support
+            protocol = "rediss" if settings.redis_ssl else "redis"
+            redis_url = f"{protocol}://{settings.redis_host}:{settings.redis_port}/{settings.redis_db_translation}"
+
+            # Build connection kwargs
+            connection_kwargs = {
+                "encoding": "utf8",
+                "decode_responses": True,
+            }
+
+            if settings.redis_password:
+                connection_kwargs["password"] = settings.redis_password
+
+            if settings.redis_ssl:
+                connection_kwargs["ssl"] = True
+
+            self.redis = aioredis.from_url(redis_url, **connection_kwargs)
 
             # Test connection
             await self.redis.ping()
@@ -45,6 +56,7 @@ class TranslationCache:
             logger.info(
                 "Connected to Redis for translation cache",
                 db=settings.redis_db_translation,
+                ssl=settings.redis_ssl,
             )
 
         except Exception as e:

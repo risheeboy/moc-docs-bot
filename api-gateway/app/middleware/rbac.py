@@ -4,6 +4,7 @@ from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,15 @@ class RBACMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         """Check RBAC permissions before processing request."""
         path = request.url.path
+
+        # Check if authentication is enabled (default: False for VPC-only access)
+        auth_enabled = os.getenv("AUTH_ENABLED", "false").lower() == "true"
+
+        # If auth is disabled, treat all requests as admin
+        if not auth_enabled:
+            if not hasattr(request.state, "user"):
+                request.state.user = {"role": "admin", "user_id": "vpc-internal"}
+            return await call_next(request)
 
         # Check if endpoint requires authentication
         required_roles = self._get_required_roles(path)

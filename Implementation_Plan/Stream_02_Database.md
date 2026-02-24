@@ -47,7 +47,7 @@ database/
 | `system_config` | Key-value config (model names, thresholds, feature flags) |
 | `scrape_jobs` | Web scraping job status (target_url, last_scraped, status, doc_count) |
 | `translation_cache` | Cached translations (source_text_hash, source_lang, target_lang, translated_text) |
-| `model_versions` | Fine-tuned model tracking (model_id, version, eval_score, status, minio_path) |
+| `model_versions` | Fine-tuned model tracking (model_id, version, eval_score, status, s3_path) |
 | `events` | Cultural events extracted from Ministry websites (title, date, venue, description, source_url, language) |
 | `api_keys` | API key management for external integrations (key_hash, role_id, created_by, expires_at, is_active) |
 
@@ -74,7 +74,7 @@ Create PostgreSQL 16 schema with tables: users, roles, permissions,
 sessions, conversations, documents, document_chunks, feedback (with
 sentiment_score + sentiment_label columns), audit_log, analytics_events,
 system_config, scrape_jobs (30 target websites), translation_cache,
-model_versions (model_id, version, eval_score, created_at, status, minio_path).
+model_versions (model_id, version, eval_score, created_at, status, s3_path).
 RBAC: roles table with 4 roles:
   - admin: full access (CRUD all, config, scrape, model management)
   - editor: manage documents, view analytics, trigger scrapes

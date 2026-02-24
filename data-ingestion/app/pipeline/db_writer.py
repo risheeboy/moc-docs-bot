@@ -46,7 +46,7 @@ class DatabaseWriter:
                 "raw_document_path": document.get("raw_document_path"),
                 "processed_text_path": document.get("processed_text_path"),
                 "metadata": document.get("metadata", {}),
-                "minio_ids": document.get("minio_ids", []),
+                "s3_ids": document.get("s3_ids", []),
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow(),
                 "job_id": job_id,

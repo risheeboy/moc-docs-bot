@@ -1,0 +1,95 @@
+{
+  "family": "ragqa-prometheus",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "prometheus",
+      "image": "prom/prometheus:latest",
+      "portMappings": [
+        {
+          "containerPort": 9090,
+          "hostPort": 9090,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "command": [
+        "--config.file=/etc/prometheus/prometheus.yml",
+        "--storage.tsdb.path=/prometheus",
+        "--storage.tsdb.retention.time=30d",
+        "--web.console.libraries=/usr/share/prometheus/console_libraries",
+        "--web.console.templates=/usr/share/prometheus/consoles",
+        "--web.external-url=http://prometheus.ragqa.local:9090"
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "prometheus-config",
+          "containerPath": "/etc/prometheus",
+          "readOnly": true
+        },
+        {
+          "sourceVolume": "prometheus-data",
+          "containerPath": "/prometheus",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ragqa-prometheus",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 10
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "prometheus-config",
+      "efsVolumeConfiguration": {
+        "filesystemId": "${EFS_FILESYSTEM_ID}",
+        "transitEncryption": "ENABLED",
+        "transitEncryptionPort": 3049,
+        "authorizationConfig": {
+          "accessPointId": "${EFS_ACCESS_POINT_ID_PROMETHEUS_CONFIG}"
+        }
+      }
+    },
+    {
+      "name": "prometheus-data",
+      "efsVolumeConfiguration": {
+        "filesystemId": "${EFS_FILESYSTEM_ID}",
+        "transitEncryption": "ENABLED",
+        "transitEncryptionPort": 3049,
+        "authorizationConfig": {
+          "accessPointId": "${EFS_ACCESS_POINT_ID_PROMETHEUS_DATA}"
+        }
+      }
+    }
+  ],
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "tags": [
+    {
+      "key": "Service",
+      "value": "prometheus"
+    },
+    {
+      "key": "Component",
+      "value": "monitoring"
+    }
+  ]
+}

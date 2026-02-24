@@ -172,7 +172,7 @@ Runs all 14 migrations in order, then populates seed data. Use `--skip-seed` to 
 # Full backup to local directory
 ./backup.sh
 
-# Backup and upload to MinIO
+# Backup and upload to S3
 ./backup.sh --upload
 
 # Incremental backup

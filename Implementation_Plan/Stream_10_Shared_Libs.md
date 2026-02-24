@@ -23,7 +23,7 @@ shared/
 │       │   ├── redis_client.py     # Redis connection helper
 │       │   ├── postgres_client.py  # Async PostgreSQL helper
 │       │   ├── milvus_client.py    # Milvus connection helper
-│       │   └── minio_client.py     # MinIO object storage helper
+│       │   └── minio_client.py     # S3 object storage helper
 │       ├── middleware/
 │       │   ├── __init__.py
 │       │   ├── logging.py          # Structured JSON logging
@@ -73,7 +73,7 @@ Create a Python package 'rag-shared' with:
 - Shared Pydantic models: ChatMessage, Source, SearchResult,
   MultimediaResult, EventResult, Document, HealthStatus
 - Base HTTP client with retry/circuit-breaker
-- Client helpers: Redis, PostgreSQL (async), Milvus, MinIO
+- Client helpers: Redis, PostgreSQL (async), Milvus, S3
 - Structured JSON logging, Prometheus metrics helpers
 - AES encryption utility, input sanitizer
 - Hindi Unicode normalizer, Hindi sentence tokenizer, Hindi stopwords

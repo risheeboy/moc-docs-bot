@@ -151,7 +151,7 @@ curl -X POST http://localhost:8007/evaluate \
 └── ministry_qa_pairs.jsonl         # Generated QA pairs
 ```
 
-## MinIO Paths
+## S3 Paths
 
 ```
 models/
@@ -184,7 +184,7 @@ TRAINING_MAX_SEQ_LENGTH=2048
 LLM_MODEL_STANDARD=meta-llama/Llama-3.1-8B-Instruct-AWQ
 LLM_MODEL_LONGCTX=mistralai/Mistral-NeMo-Instruct-2407-AWQ
 
-# MinIO
+# S3
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=<key>
 MINIO_SECRET_KEY=<key>
@@ -333,7 +333,7 @@ This service complies with:
 - ✅ Stream 14 specification (Model Fine-Tuning & Evaluation)
 - ✅ Shared Contracts (§1-18 from 01_Shared_Contracts.md)
 - ✅ API Schema (§8.7 endpoints)
-- ✅ MinIO paths (§16)
+- ✅ S3 paths (§16)
 - ✅ Error format (§4)
 - ✅ Health checks (§5)
 - ✅ Logging (§6)

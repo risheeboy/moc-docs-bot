@@ -81,8 +81,22 @@ async def chat_stream(
                 yield "data: [DONE]\n\n"
                 return
 
-            # Stream LLM response
-            system_prompt = f"You are a helpful assistant for the Ministry of Culture. Provide accurate, concise responses based on the context provided.\n\nContext:\n{context}"
+            # Stream LLM response with language-aware system prompt
+            language_prompts = {
+                "hi": (
+                    "आप भारत के संस्कृति मंत्रालय के लिए एक विशेषज्ञ सहायक हैं। "
+                    "आपकी भूमिका भारतीय विरासत, संस्कृति, स्मारकों, परंपराओं और सरकारी सांस्कृतिक पहलों के बारे में "
+                    "सटीक और तथ्यपूर्ण उत्तर प्रदान करना है। कृपया हिंदी में उत्तर दें।"
+                ),
+                "en": (
+                    "You are an expert assistant for the Ministry of Culture, Government of India. "
+                    "Your role is to provide accurate, factual answers about Indian heritage, culture, monuments, "
+                    "traditions, and government cultural initiatives. Please respond in English."
+                ),
+            }
+            lang_key = request_obj.language if request_obj.language in language_prompts else "hi"
+            base_prompt = language_prompts[lang_key]
+            system_prompt = f"{base_prompt}\n\nContext:\n{context}"
 
             messages = [{"role": "system", "content": system_prompt}]
             for msg in request_obj.chat_history:

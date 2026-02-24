@@ -40,7 +40,7 @@
 ## Data Protection
 
 ### Encryption
-- **At rest:** AES-256 encryption for all stored data (PostgreSQL, MinIO, Redis, backups)
+- **At rest:** AES-256 encryption for all stored data (PostgreSQL, S3, Redis, backups)
 - **In transit:** TLS 1.2+ for all communications (NGINX SSL termination)
 - **Key management:** Secure storage of encryption keys, separate from data
 

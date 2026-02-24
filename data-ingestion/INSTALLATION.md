@@ -89,7 +89,7 @@ INGESTION_REQUEST_TIMEOUT_SECONDS=30
 INGESTION_MAX_RETRIES=3
 ```
 
-### MinIO (Object Storage)
+### S3 (Object Storage)
 ```
 MINIO_ENDPOINT=minio:9000      # or minio.example.com:9000
 MINIO_ACCESS_KEY=minioadmin     # Change in production!
@@ -195,7 +195,7 @@ CREATE INDEX IF NOT EXISTS idx_events_date ON events(date);
 CREATE INDEX IF NOT EXISTS idx_scrape_jobs_status ON scrape_jobs(status);
 ```
 
-### Setup MinIO Buckets
+### Setup S3 Buckets
 
 ```bash
 # Using minio/mc client
@@ -347,10 +347,10 @@ docker-compose logs -f data-ingestion
 3. Verify network connectivity: `docker network ls`
 4. Check database credentials
 
-### Issue: MinIO connection errors
+### Issue: S3 connection errors
 
 **Solution:**
-1. Verify MinIO service: `docker ps | grep minio`
+1. Verify S3 service: `docker ps | grep minio`
 2. Check `MINIO_ENDPOINT` and credentials
 3. Test manually:
 ```bash
@@ -435,7 +435,7 @@ docker-compose exec postgres pg_dump -U ragqa_user ragqa > backup.sql
 docker exec -i data-postgres psql -U ragqa_user ragqa < backup.sql
 ```
 
-### Backup MinIO
+### Backup S3
 
 ```bash
 # Using mc

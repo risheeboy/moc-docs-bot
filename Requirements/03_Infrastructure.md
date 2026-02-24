@@ -22,7 +22,7 @@
   - Model weights storage
   - Database storage (PostgreSQL)
   - Backup storage
-- **MinIO object storage** configured with 10TB capacity
+- **S3 object storage** configured with 10TB capacity
 - Backup volumes must be on **separate physical storage** from primary
 
 ### Network
@@ -52,7 +52,7 @@
 - **Automated daily backups:**
   - PostgreSQL: pg_dump (daily incremental, weekly full)
   - Milvus: vector DB snapshots
-  - MinIO: bucket sync to backup storage
+  - S3: bucket sync to backup storage
   - Redis: RDB dump
 - **Disaster Recovery targets:**
   - RTO (Recovery Time Objective): < 4 hours

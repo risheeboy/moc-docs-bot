@@ -1,0 +1,102 @@
+{
+  "family": "ragqa-ocr-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "8192",
+  "containerDefinitions": [
+    {
+      "name": "ocr-service",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ragqa/ocr-service:${IMAGE_TAG}",
+      "portMappings": [
+        {
+          "containerPort": 8005,
+          "hostPort": 8005,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": "1"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_LOG_LEVEL",
+          "value": "INFO"
+        },
+        {
+          "name": "OCR_TESSERACT_LANG",
+          "value": "hin+eng"
+        },
+        {
+          "name": "OCR_EASYOCR_LANGS",
+          "value": "hi,en"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "ap-south-1"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "efs-storage",
+          "containerPath": "/app/uploads",
+          "readOnly": false
+        },
+        {
+          "sourceVolume": "efs-storage",
+          "containerPath": "/app/models",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ragqa-ocr-service",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "python -c \"import requests; requests.get('http://localhost:8005/health', timeout=5)\" || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "efs-storage",
+      "efsVolumeConfiguration": {
+        "filesystemId": "${EFS_FILESYSTEM_ID}",
+        "transitEncryption": "ENABLED",
+        "transitEncryptionPort": 3049,
+        "authorizationConfig": {
+          "accessPointId": "${EFS_ACCESS_POINT_ID_OCR}"
+        }
+      }
+    }
+  ],
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "tags": [
+    {
+      "key": "Service",
+      "value": "ocr-service"
+    },
+    {
+      "key": "Component",
+      "value": "core"
+    }
+  ]
+}

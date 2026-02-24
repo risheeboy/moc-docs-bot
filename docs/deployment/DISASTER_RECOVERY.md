@@ -84,7 +84,7 @@ watch -n 1 nvidia-smi
 
 ### Scenario 4: Storage Full (RTO: 30 minutes)
 
-**Example:** MinIO bucket reaches capacity
+**Example:** S3 bucket reaches capacity
 
 ```bash
 # 1. Check disk space

@@ -1,0 +1,108 @@
+{
+  "family": "ragqa-speech-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["EC2"],
+  "containerDefinitions": [
+    {
+      "name": "speech-service",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ragqa/speech-service:${IMAGE_TAG}",
+      "portMappings": [
+        {
+          "containerPort": 8003,
+          "hostPort": 8003,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": "1"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_LOG_LEVEL",
+          "value": "INFO"
+        },
+        {
+          "name": "SPEECH_SAMPLE_RATE",
+          "value": "16000"
+        },
+        {
+          "name": "CUDA_VISIBLE_DEVICES",
+          "value": "1"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "ap-south-1"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SPEECH_STT_MODEL",
+          "valueFrom": "${SECRET_ARN_PREFIX}speech-stt-model"
+        },
+        {
+          "name": "SPEECH_TTS_HINDI_MODEL",
+          "valueFrom": "${SECRET_ARN_PREFIX}speech-tts-hindi-model"
+        },
+        {
+          "name": "SPEECH_TTS_ENGLISH_MODEL",
+          "valueFrom": "${SECRET_ARN_PREFIX}speech-tts-english-model"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "model-cache",
+          "containerPath": "/app/models",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ragqa-speech-service",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "python -c \"import requests; requests.get('http://localhost:8003/health', timeout=5)\" || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 45
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "model-cache",
+      "host": {
+        "sourcePath": "/mnt/efs/models"
+      }
+    }
+  ],
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "tags": [
+    {
+      "key": "Service",
+      "value": "speech-service"
+    },
+    {
+      "key": "Component",
+      "value": "gpu"
+    },
+    {
+      "key": "InstanceType",
+      "value": "g5.2xlarge"
+    }
+  ]
+}

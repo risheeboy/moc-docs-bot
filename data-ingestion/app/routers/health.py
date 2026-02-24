@@ -33,25 +33,25 @@ class HealthResponse(BaseModel):
     dependencies: Dict[str, DependencyHealth]
 
 
-async def check_minio_health() -> tuple[str, float]:
-    """Check MinIO connectivity."""
+async def check_s3_health() -> tuple[str, float]:
+    """Check S3 connectivity."""
     import time
     try:
-        from minio import Minio
+        import boto3
 
         start = time.time()
-        client = Minio(
-            settings.minio_endpoint,
-            access_key=settings.minio_access_key,
-            secret_key=settings.minio_secret_key,
-            secure=settings.minio_use_ssl,
+        client = boto3.client(
+            "s3",
+            region_name=settings.aws_default_region,
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
         )
         # Try to list buckets
         client.list_buckets()
         latency_ms = (time.time() - start) * 1000
         return "healthy", latency_ms
     except Exception as e:
-        logger.warning("minio_health_check_failed", error=str(e))
+        logger.warning("s3_health_check_failed", error=str(e))
         return "unhealthy", 0.0
 
 
@@ -121,17 +121,17 @@ async def check_rag_service_health() -> tuple[str, float]:
 async def health_check(request: Request) -> HealthResponse:
     """Health check endpoint."""
     # Check all dependencies
-    minio_status, minio_latency = await check_minio_health()
+    s3_status, s3_latency = await check_s3_health()
     postgres_status, postgres_latency = await check_postgres_health()
     redis_status, redis_latency = await check_redis_health()
     rag_status, rag_latency = await check_rag_service_health()
 
     # Determine overall status
-    critical_healthy = minio_status == "healthy" and postgres_status == "healthy"
+    critical_healthy = s3_status == "healthy" and postgres_status == "healthy"
 
     if critical_healthy:
         overall_status = "healthy"
-    elif minio_status == "healthy" or postgres_status == "healthy":
+    elif s3_status == "healthy" or postgres_status == "healthy":
         overall_status = "degraded"
     else:
         overall_status = "unhealthy"
@@ -145,7 +145,7 @@ async def health_check(request: Request) -> HealthResponse:
         uptime_seconds=uptime,
         timestamp=datetime.utcnow(),
         dependencies={
-            "minio": DependencyHealth(status=minio_status, latency_ms=minio_latency),
+            "s3": DependencyHealth(status=s3_status, latency_ms=s3_latency),
             "postgres": DependencyHealth(
                 status=postgres_status, latency_ms=postgres_latency
             ),

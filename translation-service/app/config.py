@@ -29,10 +29,11 @@ class Settings(BaseSettings):
         os.getenv("TRANSLATION_TIMEOUT_SECONDS", "60")
     )
 
-    # Redis Configuration
+    # Redis/ElastiCache Configuration
     redis_host: str = os.getenv("REDIS_HOST", "redis")
     redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
     redis_password: str = os.getenv("REDIS_PASSWORD", "")
+    redis_ssl: bool = os.getenv("REDIS_SSL", "false").lower() == "true"
     redis_db_translation: int = int(os.getenv("REDIS_DB_TRANSLATION", "3"))
 
     # Model paths (on disk)

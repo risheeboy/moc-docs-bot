@@ -14,7 +14,7 @@ The Data Ingestion Engine crawls the 30 ring-fenced Ministry of Culture websites
 - **Language Detection**: Automatic language classification
 - **Event Extraction**: Extracts cultural events from pages
 - **Metadata Extraction**: Titles, authors, dates, tags
-- **MinIO Integration**: Raw document storage per §16
+- **S3 Integration**: Raw document storage per §16
 - **PostgreSQL Integration**: Document metadata tracking
 - **RAG Integration**: Direct /ingest calls to RAG service per §8.1
 - **Scheduled Scraping**: APScheduler for periodic re-scraping
@@ -37,7 +37,7 @@ The Data Ingestion Engine crawls the 30 ring-fenced Ministry of Culture websites
     ├─→│ StaticSpider     │       │ Deduplicator     │
     │  │ DynamicSpider    │──────→│ LanguageDetect   │
     │  │ PdfSpider        │       │ Chunker          │
-    │  │ MediaSpider      │       │ MinIOUploader    │
+    │  │ MediaSpider      │       │ S3Uploader    │
     │  └──────────────────┘       │ DbWriter         │
     │                             └────────┬─────────┘
     │                                      │
@@ -45,7 +45,7 @@ The Data Ingestion Engine crawls the 30 ring-fenced Ministry of Culture websites
                                │
                 ┌──────────────┴──────────────┐
                 │                             │
-            MinIO                        PostgreSQL
+            S3                        PostgreSQL
          (documents/)                 (documents,
                                       events,
                                     scrape_jobs)
@@ -166,7 +166,7 @@ INGESTION_SCRAPE_INTERVAL_HOURS=24
 INGESTION_MAX_CONCURRENT_SPIDERS=4
 INGESTION_RESPECT_ROBOTS_TXT=true
 
-# MinIO settings
+# S3 settings
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
@@ -219,7 +219,7 @@ Extracts images, videos, and multimedia metadata from pages.
 3. **Deduplicator** → Detects duplicate/near-duplicate content
 4. **Language Classifier** → Detects document language
 5. **Chunker** → Splits content into RAG-compatible chunks
-6. **MinIO Upload** → Stores raw documents
+6. **S3 Upload** → Stores raw documents
 7. **RAG Ingest** → Calls RAG /ingest endpoint
 8. **DB Write** → Records metadata in PostgreSQL
 
@@ -255,7 +255,7 @@ curl http://localhost:8006/health
 ```
 
 Returns health status of:
-- MinIO connectivity
+- S3 connectivity
 - PostgreSQL connectivity
 - Redis connectivity
 - RAG Service connectivity
@@ -272,7 +272,7 @@ Per Shared Contracts (01_Shared_Contracts.md):
 - **§8.6**: Job trigger/status API schemas
 - **§9**: Language codes (ISO 639-1)
 - **§11**: Prometheus metrics
-- **§16**: MinIO bucket structure
+- **§16**: S3 bucket structure
 
 ## Production Deployment
 
@@ -342,11 +342,11 @@ CREATE TABLE scrape_jobs (
 - Disable MinHash deduplication for initial pass
 - Profile PDF parsing for slow PDFs
 
-### MinIO errors
+### S3 errors
 
 - Verify bucket exists and is accessible
 - Check MINIO_ACCESS_KEY and MINIO_SECRET_KEY
-- Ensure MinIO endpoint is reachable
+- Ensure S3 endpoint is reachable
 
 ## License
 

@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "API Gateway and service metrics for RAG-Based Hindi QA System",
+  "description": "API Gateway and service metrics for RAG-Based Hindi & English, Search & QA System",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,

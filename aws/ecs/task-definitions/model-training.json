@@ -1,0 +1,124 @@
+{
+  "family": "ragqa-model-training",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["EC2"],
+  "containerDefinitions": [
+    {
+      "name": "model-training",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ragqa/model-training:${IMAGE_TAG}",
+      "portMappings": [
+        {
+          "containerPort": 8007,
+          "hostPort": 8007,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": "1"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_LOG_LEVEL",
+          "value": "INFO"
+        },
+        {
+          "name": "TRAINING_LORA_RANK",
+          "value": "16"
+        },
+        {
+          "name": "TRAINING_LORA_ALPHA",
+          "value": "32"
+        },
+        {
+          "name": "TRAINING_LEARNING_RATE",
+          "value": "2e-4"
+        },
+        {
+          "name": "TRAINING_EPOCHS",
+          "value": "3"
+        },
+        {
+          "name": "TRAINING_BATCH_SIZE",
+          "value": "4"
+        },
+        {
+          "name": "CUDA_VISIBLE_DEVICES",
+          "value": "3"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "ap-south-1"
+        },
+        {
+          "name": "AWS_S3_REGION",
+          "value": "ap-south-1"
+        },
+        {
+          "name": "AWS_S3_USE_SSL",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "AWS_S3_BUCKET_MODELS",
+          "valueFrom": "${SECRET_ARN_PREFIX}s3-bucket-models"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "model-cache",
+          "containerPath": "/app/models",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ragqa-model-training",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "python -c \"import requests; requests.get('http://localhost:8007/health', timeout=5)\" || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 20
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "model-cache",
+      "host": {
+        "sourcePath": "/mnt/efs/models"
+      }
+    }
+  ],
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "tags": [
+    {
+      "key": "Service",
+      "value": "model-training"
+    },
+    {
+      "key": "Component",
+      "value": "gpu"
+    },
+    {
+      "key": "InstanceType",
+      "value": "g5.2xlarge"
+    }
+  ]
+}

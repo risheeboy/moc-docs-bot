@@ -25,7 +25,7 @@ infrastructure/
 │   ├── stop.sh                     # Graceful shutdown
 │   ├── health-check.sh             # Verify all services are healthy (deep checks)
 │   ├── seed-data.sh                # Trigger initial web scrape + ingestion
-│   ├── backup.sh                   # Automated backup (PG, Milvus, MinIO, Redis)
+│   ├── backup.sh                   # Automated backup (PG, Milvus, S3, Redis)
 │   ├── restore.sh                  # Restore from backup with validation
 │   ├── backup-validate.sh          # Verify backup integrity (restore to temp, checksum)
 │   └── monthly-report.sh           # Generate monthly performance report from Prometheus API
@@ -98,9 +98,9 @@ NGINX routing: /api/* → api-gateway, /search → search-page SPA,
 Include health checks, named volumes (postgres-data, milvus-data, minio-data,
 redis-data, model-cache, langfuse-data), resource limits, restart policies.
 BACKUP: Add cron-based backup scripts for PostgreSQL (pg_dump), Milvus
-snapshots, MinIO bucket sync, Redis RDB dump. Daily incremental, weekly full.
+snapshots, S3 bucket sync, Redis RDB dump. Daily incremental, weekly full.
 Include backup validation script (restore to temp DB, verify checksum).
-MinIO must be provisioned with 10TB capacity.
+S3 must be provisioned with 10TB capacity.
 NIC/MeitY: Document that Docker host must be in NIC/MeitY-empanelled
 Data Centre in India. Add compliance notes in comments.
 NGINX TLS: enforce TLS 1.2+, configure cipher suite allowlist, HSTS header.

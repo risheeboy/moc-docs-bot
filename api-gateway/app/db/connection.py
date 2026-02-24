@@ -20,9 +20,13 @@ class Database:
     async def initialize(self):
         """Initialize database connections."""
         try:
-            # SQLAlchemy async engine
+            # SQLAlchemy async engine with RDS SSL support
+            connect_args = {}
+            if "sslmode=require" in self.database_url:
+                connect_args = {"ssl": True}
+
             self.engine = create_async_engine(
-                self.database_url, echo=False, pool_pre_ping=True
+                self.database_url, echo=False, pool_pre_ping=True, connect_args=connect_args
             )
 
             # Session factory

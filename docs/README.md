@@ -1,4 +1,4 @@
-# Documentation — RAG-Based Hindi QA System
+# Documentation — RAG-Based Hindi & English, Search & QA System
 
 **Version:** 1.0.0
 **For:** Ministry of Culture, Government of India
@@ -57,7 +57,7 @@ All services deployed as Docker containers on NIC/MeitY government data centre i
 | **PREREQUISITES.md** | Hardware, OS, GPU, Docker, CUDA requirements | DevOps |
 | **DEPLOYMENT_GUIDE.md** | Step-by-step installation on NIC/MeitY | DevOps, SysAdmin |
 | **CONFIGURATION.md** | All environment variables documented (from §3.2) | DevOps, Ops |
-| **BACKUP_RESTORE.md** | Backup procedures for PostgreSQL, Milvus, MinIO, Redis | Ops |
+| **BACKUP_RESTORE.md** | Backup procedures for PostgreSQL, Milvus, S3, Redis | Ops |
 | **DISASTER_RECOVERY.md** | DR plan with RTO <4hr, RPO <1hr (per RFP) | Ops, Management |
 | **MONITORING_GUIDE.md** | Prometheus, Grafana, Langfuse configuration | DevOps, Ops |
 | **TROUBLESHOOTING.md** | Common issues and resolutions | Ops, Support |
@@ -246,7 +246,7 @@ See [PREREQUISITES.md](deployment/PREREQUISITES.md) for full details.
 | **Vector DB** | Milvus 2.4 |
 | **Database** | PostgreSQL 16 |
 | **Cache** | Redis 7 |
-| **Storage** | MinIO (S3-compatible) |
+| **Storage** | S3 (S3-compatible) |
 | **Container** | Docker + Docker Compose |
 | **Monitoring** | Prometheus + Grafana + Langfuse |
 
@@ -382,7 +382,7 @@ docs/
 │   ├── PREREQUISITES.md            # Hardware, OS, GPU, Docker setup
 │   ├── DEPLOYMENT_GUIDE.md         # Step-by-step installation
 │   ├── CONFIGURATION.md            # Environment variables (all from §3.2)
-│   ├── BACKUP_RESTORE.md           # Backup procedures (PG, Milvus, MinIO, Redis)
+│   ├── BACKUP_RESTORE.md           # Backup procedures (PG, Milvus, S3, Redis)
 │   ├── DISASTER_RECOVERY.md        # DR plan (RTO <4hr, RPO <1hr)
 │   ├── MONITORING_GUIDE.md         # Prometheus, Grafana, Langfuse setup
 │   └── TROUBLESHOOTING.md          # Common issues and fixes

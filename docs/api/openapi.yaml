@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: RAG-Based Hindi QA System API
+  title: RAG-Based Hindi & English, Search & QA System API
   description: API Gateway for Ministry of Culture conversational chatbot and semantic search
   version: 1.0.0
   contact:

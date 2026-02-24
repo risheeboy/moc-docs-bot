@@ -1,4 +1,4 @@
-# API Reference — RAG-Based Hindi QA System
+# API Reference — RAG-Based Hindi & English, Search & QA System
 
 **Version:** 1.0.0
 **Last Updated:** February 24, 2026
@@ -919,7 +919,7 @@ document_id: UUID (required)
       "image_id": "img-001",
       "url": "https://culture.gov.in/images/heritage-1.jpg",
       "alt_text": "Taj Mahal restoration work",
-      "minio_path": "documents/img-001.jpg"
+      "s3_path": "documents/img-001.jpg"
     }
   ]
 }

@@ -281,7 +281,7 @@ Progress displayed:
    - PostgreSQL
    - Redis
    - Milvus
-   - MinIO
+   - S3
    - LLM service
    - GPU status
 
@@ -343,7 +343,7 @@ Progress displayed:
 Enabled by default:
 - PostgreSQL: Daily at 2 AM
 - Milvus: Daily at 2 AM
-- MinIO: Continuous sync
+- S3: Continuous sync
 - Redis: Hourly snapshots
 
 ### Manual Backup

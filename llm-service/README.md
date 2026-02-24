@@ -508,4 +508,4 @@ Enable CPU offload: swap_space=4
 
 ## License
 
-Part of RAG-based Hindi QA System for Ministry of Culture, Government of India.
+Part of RAG-based Hindi & English, Search & QA System for Ministry of Culture, Government of India.

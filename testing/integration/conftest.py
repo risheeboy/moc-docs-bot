@@ -16,7 +16,6 @@ import pytest
 import psycopg
 import redis
 from pymilvus import MilvusClient
-from minio import Minio
 from testcontainers.compose import DockerCompose
 
 
@@ -37,7 +36,6 @@ SERVICES = {
     "postgres": 5432,
     "redis": 6379,
     "milvus": 19530,
-    "minio": 9000,
 }
 
 EXTERNAL_PORTS = {
@@ -252,13 +250,15 @@ def milvus_client():
 
 
 @pytest.fixture
-def minio_client():
-    """MinIO S3-compatible object storage client."""
-    client = Minio(
-        endpoint="localhost:9000",
-        access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
-        secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
-        secure=False,
+def s3_client():
+    """AWS S3 client for integration testing."""
+    import boto3
+    client = boto3.client(
+        "s3",
+        endpoint_url=os.getenv("AWS_ENDPOINT_URL", "http://localhost:4566"),
+        region_name=os.getenv("AWS_DEFAULT_REGION", "ap-south-1"),
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID", "test"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY", "test"),
     )
     yield client
 

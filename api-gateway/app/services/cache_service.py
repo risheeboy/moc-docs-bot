@@ -1,9 +1,10 @@
-"""Redis-based caching service."""
+"""Redis/ElastiCache-based caching service."""
 
 import json
 import logging
 from typing import Optional, Any
 from redis.asyncio import Redis
+import os
 
 logger = logging.getLogger(__name__)
 

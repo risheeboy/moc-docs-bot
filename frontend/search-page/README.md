@@ -4,7 +4,7 @@ A production-grade React 18 + TypeScript standalone SPA providing AI-powered sem
 
 ## Overview
 
-This is **Stream 11** of the RAG-Based Hindi QA System implementation. It's a full-page search interface (distinct from the chatbot widget in Stream 8) with:
+This is **Stream 11** of the RAG-Based Hindi & English, Search & QA System implementation. It's a full-page search interface (distinct from the chatbot widget in Stream 8) with:
 
 - **AI-generated summaries** of search results (like Google AI Overview)
 - **Multimedia results** (images/videos from Ministry websites)

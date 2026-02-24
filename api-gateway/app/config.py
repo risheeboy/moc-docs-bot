@@ -14,17 +14,19 @@ class Settings(BaseSettings):
     app_log_level: str = Field(default="INFO")
     app_secret_key: str = Field(default="dev-secret-key-change-in-production")
 
-    # PostgreSQL (main)
+    # PostgreSQL (main) / RDS
     postgres_host: str = Field(default="postgres")
     postgres_port: int = Field(default=5432)
     postgres_db: str = Field(default="ragqa")
     postgres_user: str = Field(default="ragqa_user")
     postgres_password: str = Field(default="password")
+    postgres_ssl_mode: str = Field(default="disable")
 
-    # Redis
+    # Redis / ElastiCache
     redis_host: str = Field(default="redis")
     redis_port: int = Field(default=6379)
     redis_password: Optional[str] = Field(default=None)
+    redis_ssl: bool = Field(default=False)
     redis_db_cache: int = Field(default=0)
     redis_db_rate_limit: int = Field(default=1)
     redis_db_session: int = Field(default=2)
@@ -36,14 +38,14 @@ class Settings(BaseSettings):
     milvus_collection_text: str = Field(default="ministry_text")
     milvus_collection_image: str = Field(default="ministry_images")
 
-    # MinIO
-    minio_endpoint: str = Field(default="minio:9000")
-    minio_access_key: str = Field(default="minioadmin")
-    minio_secret_key: str = Field(default="minioadmin")
-    minio_bucket_documents: str = Field(default="documents")
-    minio_bucket_models: str = Field(default="models")
-    minio_bucket_backups: str = Field(default="backups")
-    minio_use_ssl: bool = Field(default=False)
+    # AWS S3
+    aws_default_region: str = Field(default="ap-south-1")
+    aws_s3_bucket_documents: str = Field(default="ragqa-documents")
+    aws_s3_bucket_models: str = Field(default="ragqa-models")
+    aws_s3_bucket_backups: str = Field(default="ragqa-backups")
+
+    # Authentication (disable for VPC-only access)
+    auth_enabled: bool = Field(default=False)
 
     # JWT
     jwt_secret_key: str = Field(default="dev-jwt-secret-key-change-in-production")
@@ -111,14 +113,18 @@ class Settings(BaseSettings):
 
     @property
     def postgres_url(self) -> str:
-        """PostgreSQL connection URL."""
-        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        """PostgreSQL/RDS connection URL."""
+        url = f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        if self.postgres_ssl_mode != "disable":
+            url += f"?sslmode={self.postgres_ssl_mode}"
+        return url
 
     @property
     def redis_url(self) -> str:
-        """Redis connection URL."""
+        """Redis/ElastiCache connection URL."""
+        protocol = "rediss" if self.redis_ssl else "redis"
         auth = f":{self.redis_password}@" if self.redis_password else ""
-        return f"redis://{auth}{self.redis_host}:{self.redis_port}"
+        return f"{protocol}://{auth}{self.redis_host}:{self.redis_port}"
 
     @property
     def allowed_origins_list(self) -> list[str]:

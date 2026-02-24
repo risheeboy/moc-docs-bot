@@ -95,14 +95,14 @@ dedup_duplicates_detected = Counter(
 )
 
 # Storage metrics
-minio_upload_errors_total = Counter(
-    "ingestion_minio_upload_errors_total",
-    "Total MinIO upload errors",
+s3_upload_errors_total = Counter(
+    "ingestion_s3_upload_errors_total",
+    "Total S3 upload errors",
 )
 
 documents_stored_bytes = Histogram(
     "ingestion_documents_stored_bytes",
-    "Size of documents stored in MinIO",
+    "Size of documents stored in S3",
     ["document_type"],
 )
 

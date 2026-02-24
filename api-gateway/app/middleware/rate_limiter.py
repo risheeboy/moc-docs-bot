@@ -1,4 +1,4 @@
-"""Redis-based token bucket rate limiting middleware."""
+"""Redis/ElastiCache-based token bucket rate limiting middleware."""
 
 import time
 from fastapi import Request, HTTPException
@@ -7,6 +7,7 @@ from starlette.responses import Response
 from redis.asyncio import Redis
 from typing import Optional
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 

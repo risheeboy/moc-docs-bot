@@ -1,7 +1,7 @@
 # User Acceptance Test (UAT) Report
 
 **Date:** {{date}}
-**Product:** RAG-based Hindi QA System
+**Product:** RAG-based Hindi & English, Search & QA System
 **Tester:** QA Team / Automated Tests
 **Test Cycles:** {{test_cycles}}
 

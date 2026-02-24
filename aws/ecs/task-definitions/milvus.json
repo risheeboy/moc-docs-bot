@@ -1,0 +1,91 @@
+{
+  "family": "ragqa-milvus",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "4096",
+  "memory": "16384",
+  "containerDefinitions": [
+    {
+      "name": "milvus",
+      "image": "milvusdb/milvus:latest",
+      "portMappings": [
+        {
+          "containerPort": 19530,
+          "hostPort": 19530,
+          "protocol": "tcp"
+        },
+        {
+          "containerPort": 9091,
+          "hostPort": 9091,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "COMMON_STORAGETYPE",
+          "value": "local"
+        },
+        {
+          "name": "PULSAR_ADDRESS",
+          "value": "http://milvus:6650"
+        }
+      ],
+      "command": [
+        "milvus",
+        "run",
+        "standalone"
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "milvus-data",
+          "containerPath": "/var/lib/milvus",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ragqa-milvus",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:9091/healthz || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "milvus-data",
+      "efsVolumeConfiguration": {
+        "filesystemId": "${EFS_FILESYSTEM_ID}",
+        "transitEncryption": "ENABLED",
+        "transitEncryptionPort": 3049,
+        "authorizationConfig": {
+          "accessPointId": "${EFS_ACCESS_POINT_ID_MILVUS}"
+        }
+      }
+    }
+  ],
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "tags": [
+    {
+      "key": "Service",
+      "value": "milvus"
+    },
+    {
+      "key": "Component",
+      "value": "infrastructure"
+    }
+  ]
+}

@@ -36,7 +36,7 @@ data-ingestion/
 │   │   ├── dedup.py                # Content deduplication (MinHash / SimHash)
 │   │   ├── language_classifier.py  # Detect document language
 │   │   ├── chunker.py              # Chunk content and send to RAG service for embedding
-│   │   ├── minio_uploader.py       # Store raw documents in MinIO object storage
+│   │   ├── minio_uploader.py       # Store raw documents in S3 object storage
 │   │   └── db_writer.py            # Write document metadata to PostgreSQL
 │   ├── schedules/
 │   │   ├── __init__.py
@@ -60,7 +60,7 @@ data-ingestion/
 - **Playwright** for JavaScript-rendered SPAs (dynamic content)
 - **Marker** for PDF→text conversion (higher quality than Tesseract for digital PDFs)
 - **trafilatura** for clean text extraction from HTML
-- **MinIO** for raw document storage (source of truth)
+- **S3** for raw document storage (source of truth)
 - **Deduplication** via MinHash to avoid re-indexing unchanged content
 - **Scheduled re-scraping** via APScheduler (configurable per-site intervals)
 
@@ -68,13 +68,13 @@ data-ingestion/
 
 **Shared Contracts Reference (from `01_Shared_Contracts.md`):**
 - §1 Service Registry: this service runs on port 8006 as `data-ingestion`
-- §3 Environment Variables: read `INGESTION_*`, `MINIO_*`, `POSTGRES_*`, `RAG_SERVICE_URL` variables
+- §3 Environment Variables: read `INGESTION_*`, `AWS_S3_*`, `POSTGRES_*`, `RAG_SERVICE_URL` variables
 - §4 Error Response Format: use standard error format from §4
-- §5 Health Check Format: `/health` must check MinIO and PostgreSQL connectivity
+- §5 Health Check Format: `/health` must check S3 and PostgreSQL connectivity
 - §8.1 Ingest API: call RAG service `/ingest` with exact schema from §8.1 (POST to rag-service:8001/ingest)
 - §8.6 Jobs API: implement exact `/jobs/trigger` and `/jobs/status` schemas from §8.6
 - §9 Language Codes: classify documents using codes from §9
-- §16 MinIO Buckets: store raw docs at `documents/raw/{source_site}/{document_id}.{ext}`, processed at `documents/processed/`
+- §16 S3 Buckets: store raw docs at `documents/raw/{source_site}/{document_id}.{ext}`, processed at `documents/processed/`
 
 ---
 
@@ -86,7 +86,7 @@ data-ingestion/
 ### Agent 12: Data Ingestion Engine (**NEW**)
 ```
 PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
-Port 8006. Call rag-service:8001/ingest per §8.1. Use MinIO paths from §16.
+Port 8006. Call rag-service:8001/ingest per §8.1. Use S3 paths from §16.
 Use jobs API schema from §8.6, env vars from §3.
 Build a FastAPI-based web scraping and content ingestion service with:
 - Scrapy spiders for static HTML crawling (government websites)
@@ -100,7 +100,7 @@ Build a FastAPI-based web scraping and content ingestion service with:
 - Marker for high-quality PDF→text conversion
 - Content deduplication (MinHash/SimHash)
 - Language classification per document
-- MinIO upload for raw document storage
+- S3 upload for raw document storage
 - PostgreSQL metadata writes (scrape_jobs, documents tables)
 - Calls RAG service /ingest to embed and index content
 - APScheduler for periodic re-scraping (configurable per site)

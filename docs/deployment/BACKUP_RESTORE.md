@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Last Updated:** February 24, 2026
-**RFP Requirement:** Backup procedures for PostgreSQL, Milvus, MinIO, Redis
+**RFP Requirement:** Backup procedures for PostgreSQL, Milvus, S3, Redis
 
 ---
 
@@ -14,7 +14,7 @@ Backup strategy for all critical data stores:
 |---|---|---|---|---|
 | PostgreSQL | Conversations, metadata | pg_dump | Daily | 30 days |
 | Milvus | Vector embeddings | Milvus snapshot | Daily | 7 days |
-| MinIO | Documents, models | Bucket sync | Daily | 14 days |
+| S3 | Documents, models | Bucket sync | Daily | 14 days |
 | Redis | Cache, sessions | RDB dump | Hourly | 1 day |
 
 ---
@@ -209,7 +209,7 @@ EOF
 
 ---
 
-## MinIO Backup
+## S3 Backup
 
 ### Bucket Structure (§16 from Shared Contracts)
 
@@ -236,7 +236,7 @@ backups/
 ### Full Bucket Backup (using mc)
 
 ```bash
-# Access MinIO CLI
+# Access S3 CLI
 docker-compose exec minio mc alias set \
     minio-local \
     http://minio:9000 \
@@ -253,7 +253,7 @@ for bucket in documents models backups; do
     mc cp --recursive minio-local/$bucket $BACKUP_DIR/$bucket/
 done
 
-echo "✓ MinIO backup complete: $BACKUP_DIR"
+echo "✓ S3 backup complete: $BACKUP_DIR"
 EOF
 ```
 
@@ -272,7 +272,7 @@ docker-compose exec -T minio mc mirror \
     s3-remote/rag-qa-backups/documents
 ```
 
-### MinIO Restore
+### S3 Restore
 
 ```bash
 # Restore bucket from backup
@@ -371,14 +371,14 @@ mkdir -p $(dirname $LOG_FILE)
         "cp -r /var/lib/milvus/data $BACKUP_BASE/milvus/$TIMESTAMP/"
     echo "✓ Milvus backup complete"
 
-    # 3. MinIO
-    echo -e "\n[3/4] Backing up MinIO..."
+    # 3. S3
+    echo -e "\n[3/4] Backing up S3..."
     mkdir -p $BACKUP_BASE/minio
     docker-compose -f /opt/rag-qa-hindi/docker-compose.yml exec -T minio mc mirror \
         --remove \
         minio-local/documents \
         $BACKUP_BASE/minio/documents/latest/
-    echo "✓ MinIO backup complete"
+    echo "✓ S3 backup complete"
 
     # 4. Redis
     echo -e "\n[4/4] Backing up Redis..."
@@ -400,7 +400,7 @@ mkdir -p $(dirname $LOG_FILE)
     echo "Backup Summary:"
     echo "PostgreSQL: $(du -sh $BACKUP_BASE/postgres | cut -f1)"
     echo "Milvus: $(du -sh $BACKUP_BASE/milvus | cut -f1)"
-    echo "MinIO: $(du -sh $BACKUP_BASE/minio | cut -f1)"
+    echo "S3: $(du -sh $BACKUP_BASE/minio | cut -f1)"
     echo "Redis: $(du -sh $BACKUP_BASE/redis | cut -f1)"
     echo "=========================================="
     echo "Backup completed successfully at $(date)"
@@ -453,7 +453,7 @@ gunzip -c $BACKUP_FILE | \
 # 3. Restore Milvus
 cp -r /mnt/backup/milvus/20260224_020000/* /mnt/data/milvus-data/
 
-# 4. Restore MinIO
+# 4. Restore S3
 docker-compose exec -T minio mc mirror \
     /mnt/backup/minio/documents \
     minio-local/documents
@@ -500,7 +500,7 @@ gunzip -t /mnt/backup/postgres/ragqa_*.dump.gz
 # Milvus data
 ls -la /mnt/backup/milvus/*/var/lib/milvus/data/
 
-# MinIO buckets
+# S3 buckets
 mc ls -r /mnt/backup/minio/documents | wc -l
 
 # Redis RDB

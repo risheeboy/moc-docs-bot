@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "LLM Service and GPU metrics for RAG-Based Hindi QA System",
+  "description": "LLM Service and GPU metrics for RAG-Based Hindi & English, Search & QA System",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,

@@ -78,20 +78,20 @@ def check_redis() -> Dict[str, Any]:
         }
 
 
-def check_minio() -> Dict[str, Any]:
-    """Check MinIO connectivity.
+def check_s3() -> Dict[str, Any]:
+    """Check S3 connectivity.
 
     Returns:
-        MinIO status dict
+        S3 status dict
     """
     start = time.time()
     try:
-        from minio import Minio
-        client = Minio(
-            config.MINIO_ENDPOINT,
-            access_key=config.MINIO_ACCESS_KEY,
-            secret_key=config.MINIO_SECRET_KEY,
-            secure=config.MINIO_USE_SSL,
+        import boto3
+        client = boto3.client(
+            "s3",
+            region_name=config.AWS_DEFAULT_REGION,
+            aws_access_key_id=config.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY,
         )
         # Try to list buckets
         client.list_buckets()
@@ -119,10 +119,10 @@ async def health_check(x_request_id: Optional[str] = Header(None)):
     # Check dependencies
     gpu_status = check_gpu_availability()
     redis_status = check_redis()
-    minio_status = check_minio()
+    s3_status = check_s3()
 
     # Determine overall status
-    critical_deps = [gpu_status, minio_status]  # GPU and MinIO are critical
+    critical_deps = [gpu_status, s3_status]  # GPU and S3 are critical
     non_critical_deps = [redis_status]
 
     critical_healthy = all(d["status"] != "unhealthy" for d in critical_deps)
@@ -149,7 +149,7 @@ async def health_check(x_request_id: Optional[str] = Header(None)):
         "dependencies": {
             "gpu": gpu_status,
             "redis": redis_status,
-            "minio": minio_status,
+            "s3": s3_status,
         },
     }
 

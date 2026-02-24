@@ -67,6 +67,6 @@ The following evaluation metrics are required:
   - Evaluation scores (all benchmark metrics)
   - Training hyperparameters
   - Status (training/evaluating/deployed/archived)
-- Model artifacts stored in MinIO object storage
+- Model artifacts stored in S3 object storage
 - Rollback capability to previous model version
 - model_versions table in PostgreSQL for tracking

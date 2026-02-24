@@ -1,0 +1,184 @@
+{
+  "family": "ragqa-rag-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "4096",
+  "memory": "16384",
+  "containerDefinitions": [
+    {
+      "name": "rag-service",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ragqa/rag-service:${IMAGE_TAG}",
+      "portMappings": [
+        {
+          "containerPort": 8001,
+          "hostPort": 8001,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": "1"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_LOG_LEVEL",
+          "value": "INFO"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "ap-south-1"
+        },
+        {
+          "name": "RAG_CHUNK_SIZE",
+          "value": "512"
+        },
+        {
+          "name": "RAG_CHUNK_OVERLAP",
+          "value": "64"
+        },
+        {
+          "name": "RAG_TOP_K",
+          "value": "10"
+        },
+        {
+          "name": "RAG_RERANK_TOP_K",
+          "value": "5"
+        },
+        {
+          "name": "RAG_CONFIDENCE_THRESHOLD",
+          "value": "0.65"
+        },
+        {
+          "name": "RAG_CACHE_TTL_SECONDS",
+          "value": "3600"
+        },
+        {
+          "name": "MILVUS_PORT",
+          "value": "19530"
+        },
+        {
+          "name": "MILVUS_COLLECTION_TEXT",
+          "value": "documents_text"
+        },
+        {
+          "name": "MILVUS_COLLECTION_IMAGE",
+          "value": "documents_image"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "REDIS_DB_CACHE",
+          "value": "0"
+        },
+        {
+          "name": "AWS_S3_REGION",
+          "value": "ap-south-1"
+        },
+        {
+          "name": "AWS_S3_USE_SSL",
+          "value": "true"
+        },
+        {
+          "name": "LANGFUSE_HOST",
+          "value": "http://langfuse.ragqa.local:3001"
+        },
+        {
+          "name": "MILVUS_HOST",
+          "value": "milvus.ragqa.local"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "redis.ragqa.local"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "RAG_EMBEDDING_MODEL",
+          "valueFrom": "${SECRET_ARN_PREFIX}rag-embedding-model"
+        },
+        {
+          "name": "RAG_VISION_EMBEDDING_MODEL",
+          "valueFrom": "${SECRET_ARN_PREFIX}rag-vision-embedding-model"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "${SECRET_ARN_PREFIX}redis-password"
+        },
+        {
+          "name": "AWS_S3_BUCKET_DOCUMENTS",
+          "valueFrom": "${SECRET_ARN_PREFIX}s3-bucket-documents"
+        },
+        {
+          "name": "LANGFUSE_PUBLIC_KEY",
+          "valueFrom": "${SECRET_ARN_PREFIX}langfuse-public-key"
+        },
+        {
+          "name": "LANGFUSE_SECRET_KEY",
+          "valueFrom": "${SECRET_ARN_PREFIX}langfuse-secret-key"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "efs-storage",
+          "containerPath": "/app/models",
+          "readOnly": false
+        },
+        {
+          "sourceVolume": "efs-storage",
+          "containerPath": "/app/uploads",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ragqa-rag-service",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "python -c \"import requests; resp = requests.get('http://localhost:8001/health', timeout=5); assert 'healthy' in resp.text\" || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "efs-storage",
+      "efsVolumeConfiguration": {
+        "filesystemId": "${EFS_FILESYSTEM_ID}",
+        "transitEncryption": "ENABLED",
+        "transitEncryptionPort": 3049,
+        "authorizationConfig": {
+          "accessPointId": "${EFS_ACCESS_POINT_ID_RAG}"
+        }
+      }
+    }
+  ],
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "tags": [
+    {
+      "key": "Service",
+      "value": "rag-service"
+    },
+    {
+      "key": "Component",
+      "value": "core"
+    }
+  ]
+}

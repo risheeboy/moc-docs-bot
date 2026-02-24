@@ -150,7 +150,7 @@ services:
     command: >
       bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
       pydantic-settings>=2.7 httpx>=0.28 structlog>=24.4 prometheus-client>=0.21
-      redis>=5.2 asyncpg>=0.30 sqlalchemy[asyncio]>=2.0 pymilvus>=2.4 minio>=7.2
+      redis>=5.2 asyncpg>=0.30 sqlalchemy[asyncio]>=2.0 pymilvus>=2.4 boto3>=1.34
       langfuse>=2.56 python-multipart llama-index sentence-transformers onnxruntime pillow &&
       python -m uvicorn app.main:app --host 0.0.0.0 --port 8001"
     environment:
@@ -173,11 +173,11 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DB_CACHE: ${REDIS_DB_CACHE:-0}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET_DOCUMENTS: ${MINIO_BUCKET_DOCUMENTS}
-      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-south-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BUCKET_DOCUMENTS: ${AWS_BUCKET_DOCUMENTS}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-}
       LANGFUSE_HOST: ${LANGFUSE_HOST}
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
@@ -189,8 +189,6 @@ services:
       milvus:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     networks:
       - rag-network
@@ -461,7 +459,7 @@ services:
     command: >
       bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
       pydantic-settings>=2.7 httpx>=0.28 structlog>=24.4 prometheus-client>=0.21
-      redis>=5.2 asyncpg>=0.30 sqlalchemy[asyncio]>=2.0 minio>=7.2
+      redis>=5.2 asyncpg>=0.30 sqlalchemy[asyncio]>=2.0 boto3>=1.34
       python-multipart scrapy playwright docx2docx pymupdf &&
       python -m uvicorn app.main:app --host 0.0.0.0 --port 8006"
     environment:
@@ -473,11 +471,11 @@ services:
       INGESTION_MAX_CONCURRENT_SPIDERS: ${INGESTION_MAX_CONCURRENT_SPIDERS:-4}
       INGESTION_RESPECT_ROBOTS_TXT: ${INGESTION_RESPECT_ROBOTS_TXT:-true}
       RAG_SERVICE_URL: ${RAG_SERVICE_URL}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET_DOCUMENTS: ${MINIO_BUCKET_DOCUMENTS}
-      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-south-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BUCKET_DOCUMENTS: ${AWS_BUCKET_DOCUMENTS}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -493,8 +491,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     networks:
       - rag-network
@@ -534,7 +530,7 @@ services:
     command: >
       bash -c "pip install --no-cache-dir -q fastapi uvicorn[standard]>=0.34 pydantic>=2.10
       pydantic-settings>=2.7 httpx>=0.28 structlog>=24.4 prometheus-client>=0.21
-      minio>=7.2 python-multipart torch transformers peft bitsandbytes &&
+      boto3>=1.34 python-multipart torch transformers peft bitsandbytes &&
       python -m uvicorn app.main:app --host 0.0.0.0 --port 8007"
     environment:
       PYTHONUNBUFFERED: 1
@@ -545,18 +541,15 @@ services:
       TRAINING_LEARNING_RATE: ${TRAINING_LEARNING_RATE:-2e-4}
       TRAINING_EPOCHS: ${TRAINING_EPOCHS:-3}
       TRAINING_BATCH_SIZE: ${TRAINING_BATCH_SIZE:-4}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET_MODELS: ${MINIO_BUCKET_MODELS}
-      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-south-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BUCKET_MODELS: ${AWS_BUCKET_MODELS}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-}
       CUDA_VISIBLE_DEVICES: 3
     volumes:
       - ./services/model-training:/app:ro
       - model-cache:/app/models
-    depends_on:
-      minio:
-        condition: service_healthy
     networks:
       - rag-network
     labels:
@@ -747,48 +740,6 @@ services:
       reservations:
         cpus: '2'
         memory: 8G
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-
-  # ============================================================================
-  # OBJECT STORAGE
-  # ============================================================================
-  minio:
-    image: minio/minio:latest
-    container_name: rag-qa-minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
-      MINIO_CONSOLE_ADDRESS: ":9001"
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio-data:/data
-    networks:
-      - rag-network
-    labels:
-      - "com.ragqa.service=minio"
-      - "com.ragqa.version=1.0.0"
-      - "com.ragqa.stream=01"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    resources:
-      limits:
-        cpus: '4'
-        memory: 8G
-      reservations:
-        cpus: '2'
-        memory: 4G
     logging:
       driver: "json-file"
       options:
@@ -1067,11 +1018,6 @@ volumes:
     driver: local
   redis-data:
     driver: local
-  minio-data:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      o: size=10737418240
   model-cache:
     driver: local
   uploaded-docs:

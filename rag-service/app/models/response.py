@@ -32,7 +32,7 @@ class SearchResult(BaseModel):
     source_site: str = Field(..., description="Source site domain")
     language: str = Field(..., description="Content language")
     content_type: str = Field(..., description="Content type")
-    thumbnail_url: Optional[str] = Field(default=None, description="Thumbnail URL from MinIO")
+    thumbnail_url: Optional[str] = Field(default=None, description="Thumbnail URL from S3")
     published_date: Optional[str] = Field(default=None, description="Publication date (ISO 8601)")
 
 

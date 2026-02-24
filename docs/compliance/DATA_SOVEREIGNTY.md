@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document certifies that all data for the RAG-Based Hindi QA System resides within India's borders and is managed under Indian government control, per IT Rules 2021 and National Data Governance Policy.
+This document certifies that all data for the RAG-Based Hindi & English, Search & QA System resides within India's borders and is managed under Indian government control, per IT Rules 2021 and National Data Governance Policy.
 
 ---
 
@@ -28,7 +28,7 @@ All data stored exclusively in:
 | PostgreSQL | Self-hosted | NIC Data Centre | Metadata, conversations, audit logs |
 | Milvus | Self-hosted | NIC Data Centre | Vector embeddings |
 | Redis | Self-hosted | NIC Data Centre | Cache, sessions |
-| MinIO | Self-hosted | NIC Data Centre | Documents, models, backups |
+| S3 | Self-hosted | NIC Data Centre | Documents, models, backups |
 
 ### Third-Party Services (COMPLIANT)
 
@@ -168,7 +168,7 @@ NIC (Operator)
     ↓
 Data Centre (Physical Infrastructure)
     ↓
-PostgreSQL, Milvus, MinIO, Redis (Applications)
+PostgreSQL, Milvus, S3, Redis (Applications)
 ```
 
 ---

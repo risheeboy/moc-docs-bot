@@ -28,7 +28,7 @@ CPU:           16 cores / 32 threads (Intel Xeon or ARM equivalent)
 RAM:           64 GB DDR4/DDR5
 GPU:           1x NVIDIA A100 (80GB) or 2x NVIDIA A40 (48GB each)
 Storage (SSD): 500 GB (NVMe, for model cache and OS)
-Storage (HDD): 10 TB (for document storage via MinIO)
+Storage (HDD): 10 TB (for document storage via S3)
 Network:       10 Gbps dedicated link (for NIC/MeitY data centre)
 ```
 
@@ -74,7 +74,7 @@ UPS:           48-hour battery for graceful shutdown
 
 1. Use Ubuntu 22.04 LTS minimal installation
 2. Allocate 500 GB SSD to `/` (root)
-3. Allocate 10+ TB HDD to `/mnt/data` (MinIO storage)
+3. Allocate 10+ TB HDD to `/mnt/data` (S3 storage)
 4. Install with LVM for flexibility
 5. Enable automatic security updates
 
@@ -369,7 +369,7 @@ docker run --rm --runtime=nvidia --gpus all nvidia/cuda:12.1.0-runtime-ubuntu22.
 | 19530 | Milvus | Internal only | Inbound |
 | 5432 | PostgreSQL | Internal only | Inbound |
 | 6379 | Redis | Internal only | Inbound |
-| 9000 | MinIO API | Internal only | Inbound |
+| 9000 | S3 API | Internal only | Inbound |
 | 9090 | Prometheus | Internal only | Inbound |
 | 3000 | Grafana | Internal only | Inbound |
 
@@ -392,7 +392,7 @@ status.culture.gov.in   A 203.x.x.x (same as primary)
 
 ```
 /              500 GB    NVMe SSD    (OS, Docker, logs)
-/mnt/data      10+ TB    HDD        (MinIO documents storage)
+/mnt/data      10+ TB    HDD        (S3 documents storage)
 /mnt/backup    2 TB      SSD        (Backup storage)
 /mnt/models    500 GB    NVMe SSD   (Model weights cache)
 ```

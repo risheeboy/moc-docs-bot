@@ -13,7 +13,7 @@ docs/
 │   ├── DEPLOYMENT_GUIDE.md          # Step-by-step deployment on NIC/MeitY Data Centre
 │   ├── PREREQUISITES.md             # Hardware requirements, OS, GPU drivers, Docker, NVIDIA toolkit
 │   ├── CONFIGURATION.md             # All environment variables documented
-│   ├── BACKUP_RESTORE.md            # Backup procedures (PostgreSQL, Milvus, MinIO, Redis)
+│   ├── BACKUP_RESTORE.md            # Backup procedures (PostgreSQL, Milvus, S3, Redis)
 │   ├── DISASTER_RECOVERY.md         # DR plan: RTO/RPO targets, failover procedures
 │   ├── MONITORING_GUIDE.md          # Prometheus alerts, Grafana dashboards, Langfuse usage
 │   └── TROUBLESHOOTING.md           # Common issues and resolutions
@@ -69,7 +69,7 @@ docs/
 - §5 Health Check Format: document health check endpoints and format from §5
 - §8 Inter-Service Contracts: API_Reference.md must include all inter-service schemas from §8.1-8.7
 - §12 RBAC: SECURITY_GUIDE.md must document the 4 roles and their permissions from §12
-- §16 MinIO Buckets: BACKUP_RESTORE.md must document the bucket structure from §16
+- §16 S3 Buckets: BACKUP_RESTORE.md must document the bucket structure from §16
 
 ---
 
@@ -87,7 +87,7 @@ Generate all RFP-required documentation deliverables:
 - Deployment guide: step-by-step for NIC/MeitY Data Centre, prerequisites
   (hardware, GPU drivers, Docker, NVIDIA toolkit), all env vars documented
 - Backup & DR: backup procedures (PostgreSQL pg_dump, Milvus snapshots,
-  MinIO bucket sync, Redis RDB). DR plan with RTO < 4hr, RPO < 1hr
+  S3 bucket sync, Redis RDB). DR plan with RTO < 4hr, RPO < 1hr
 - User manual: end-user guide for chatbot + search (English + Hindi versions)
 - Admin guide: dashboard usage, document management, scrape target config,
   model management, audit log review

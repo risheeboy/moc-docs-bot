@@ -27,7 +27,7 @@ class SearchResult(BaseModel):
     )
     thumbnail_url: Optional[str] = Field(
         default=None,
-        description="MinIO thumbnail URL if available",
+        description="S3 thumbnail URL if available",
     )
     published_date: Optional[str] = Field(
         default=None,
@@ -49,7 +49,7 @@ class MultimediaResult(BaseModel):
     source_site: str = Field(..., description="Source domain")
     thumbnail_url: Optional[str] = Field(
         default=None,
-        description="MinIO thumbnail URL",
+        description="S3 thumbnail URL",
     )
 
     model_config = ConfigDict(from_attributes=True)

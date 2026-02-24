@@ -7,7 +7,7 @@ from app.services.embedder import EmbedderService
 from app.services.vision_embedder import VisionEmbedderService
 from app.services.vector_store import VectorStoreService
 from app.services.text_splitter import HindiAwareTextSplitter
-from app.services.minio_client import MinIOClient
+from app.services.s3_client import S3Client
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class IndexerService:
         self.vision_embedder = VisionEmbedderService()
         self.vector_store = VectorStoreService()
         self.text_splitter = HindiAwareTextSplitter()
-        self.minio_client = MinIOClient()
+        self.s3_client = S3Client()
 
     def ingest_document(
         self,
@@ -136,21 +136,21 @@ class IndexerService:
                     image_id = str(uuid.uuid4())
                     image_url = img_data.get("url", "")
                     alt_text = img_data.get("alt_text", "")
-                    minio_path = img_data.get("minio_path", "")
+                    s3_path = img_data.get("s3_path", "")
 
                     # Embed image
                     if image_url.startswith("http"):
                         # Remote image
                         embedding_result = self.vision_embedder.embed_image_from_url(image_url)
                     else:
-                        # Local image from MinIO
+                        # Local image from S3
                         embedding_result = self.vision_embedder.embed_image_from_file(image_url)
 
                     milvus_img = {
                         "id": image_id,
                         "image_url": image_url,
                         "alt_text": alt_text,
-                        "source_url": minio_path,
+                        "source_url": s3_path,
                         "source_site": document_id,  # For linking back
                         "image_embedding": embedding_result["embedding"],
                         "metadata_json": json.dumps({

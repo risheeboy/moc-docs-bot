@@ -1,6 +1,6 @@
 # Speech Service (Stream 6)
 
-FastAPI-based Speech Service for the RAG-based Hindi QA System.
+FastAPI-based Speech Service for the RAG-based Hindi & English, Search & QA System.
 
 **Port:** 8003
 **Service Name:** `speech-service`

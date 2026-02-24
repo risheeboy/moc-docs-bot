@@ -15,7 +15,7 @@
 | 11 | **Open-source models only** (p8) | All models are open-source (Llama, Mistral, Gemma, AI4Bharat) | 5, 6, 13 |
 | 12 | **On-premise / Data sovereignty** (p10) | All Docker; no external API calls; all models local | 1 |
 | 13 | **NIC/MeitY Data Centre hosting** (p10) | Documented in deployment guide; Docker host compliance | 1, 16 |
-| 14 | **10TB storage** (p10) | MinIO configured with 10TB capacity | 1 |
+| 14 | **10TB storage** (p10) | S3 configured with 10TB capacity | 1 |
 | 15 | **Encryption at rest** (p9) | PostgreSQL TDE / AES utility in shared lib | 2, 10 |
 | 16 | **Encryption in transit** (p9) | NGINX TLS termination | 1 |
 | 17 | **RBAC** (p9) | Roles table + permissions matrix (admin/editor/viewer/api_consumer) | 2, 3 |
@@ -39,7 +39,7 @@
 | 35 | **Admin guide + Training** (p12) | ADMIN_GUIDE.md + TRAINING_PLAN.md | 16 |
 | 36 | **Security audit report** (p13, p22) | Automated security scanning + report generation | 15 |
 | 37 | **Test reports (UAT, perf, security)** (p12-13) | Integration, load, security, UAT test suites + reports | 15 |
-| 38 | **Backup & disaster recovery** (p11) | Automated daily backups (PG, Milvus, MinIO, Redis) + DR plan | 1, 16 |
+| 38 | **Backup & disaster recovery** (p11) | Automated daily backups (PG, Milvus, S3, Redis) + DR plan | 1, 16 |
 | 39 | **Chatbot fallback / escalation** (p7) | Graceful "contact helpline" message when confidence < threshold | 3 |
 | 40 | **Session management** (p9) | 30-min timeout, context truncation, session resumption | 3 |
 | 41 | **PII / Content guardrails** (Design) | PII redaction, hallucination detection, topic filter, toxicity | 5 |

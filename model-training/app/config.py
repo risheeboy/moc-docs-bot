@@ -34,18 +34,17 @@ class TrainingConfig(BaseSettings):
     LLM_MODEL_MULTIMODAL: str = os.getenv("LLM_MODEL_MULTIMODAL", "google/gemma-3-12b-it-awq")
     LLM_GPU_MEMORY_UTILIZATION: float = float(os.getenv("LLM_GPU_MEMORY_UTILIZATION", "0.85"))
 
-    # MinIO Configuration
-    MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT", "minio:9000")
-    MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "")
-    MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "")
-    MINIO_BUCKET_MODELS: str = os.getenv("MINIO_BUCKET_MODELS", "models")
-    MINIO_BUCKET_DOCUMENTS: str = os.getenv("MINIO_BUCKET_DOCUMENTS", "documents")
-    MINIO_USE_SSL: bool = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+    # AWS S3 Configuration
+    AWS_DEFAULT_REGION: str = os.getenv("AWS_DEFAULT_REGION", "ap-south-1")
+    AWS_S3_BUCKET_MODELS: str = os.getenv("AWS_S3_BUCKET_MODELS", "ragqa-models")
+    AWS_S3_BUCKET_DOCUMENTS: str = os.getenv("AWS_S3_BUCKET_DOCUMENTS", "ragqa-documents")
+    AWS_S3_BUCKET_BACKUPS: str = os.getenv("AWS_S3_BUCKET_BACKUPS", "ragqa-backups")
 
-    # Redis Configuration
+    # Redis/ElastiCache Configuration
     REDIS_HOST: str = os.getenv("REDIS_HOST", "redis")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
     REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
+    REDIS_SSL: bool = os.getenv("REDIS_SSL", "false").lower() == "true"
     REDIS_DB_CACHE: int = int(os.getenv("REDIS_DB_CACHE", "0"))
     REDIS_DB_SESSION: int = int(os.getenv("REDIS_DB_SESSION", "2"))
 

@@ -280,7 +280,7 @@ docker-compose exec -T postgres psql -U ragqa_user -d ragqa -c "\dt"
 # Create initial schema (run migrations)
 docker-compose exec -T api-gateway alembic upgrade head
 
-# MinIO bucket creation
+# S3 bucket creation
 docker-compose exec -T minio mc alias set minio http://localhost:9000 minioadmin $MINIO_SECRET_KEY
 docker-compose exec -T minio mc mb minio/documents minio/models minio/backups
 ```
@@ -291,7 +291,7 @@ docker-compose exec -T minio mc mb minio/documents minio/models minio/backups
 # Start object storage and cache
 docker-compose up -d minio
 
-# Wait for MinIO to be ready
+# Wait for S3 to be ready
 sleep 10
 
 # Start backend services

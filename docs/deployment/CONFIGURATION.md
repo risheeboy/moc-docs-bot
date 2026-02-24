@@ -155,34 +155,34 @@ MILVUS_COLLECTION_IMAGE=ministry_images
 
 ---
 
-### MinIO (Object Storage)
+### S3 (Object Storage)
 
 ```bash
-# MinIO endpoint (without protocol)
+# S3 endpoint (without protocol)
 MINIO_ENDPOINT=minio:9000
 
-# MinIO access key (username)
+# S3 access key (username)
 MINIO_ACCESS_KEY=<secure-key>
 
-# MinIO secret key (password)
+# S3 secret key (password)
 # Generate: python -c "import secrets; print(secrets.token_urlsafe(32))"
 MINIO_SECRET_KEY=<secure-password>
 
-# MinIO bucket for raw ingested documents
+# S3 bucket for raw ingested documents
 MINIO_BUCKET_DOCUMENTS=documents
 
-# MinIO bucket for fine-tuned model weights
+# S3 bucket for fine-tuned model weights
 MINIO_BUCKET_MODELS=models
 
-# MinIO bucket for backup archives
+# S3 bucket for backup archives
 MINIO_BUCKET_BACKUPS=backups
 
-# Use SSL/TLS for MinIO (false for internal traffic; TLS at NGINX layer)
+# Use SSL/TLS for S3 (false for internal traffic; TLS at NGINX layer)
 MINIO_USE_SSL=false
 ```
 
 **Notes:**
-- MinIO provides S3-compatible object storage
+- S3 provides S3-compatible object storage
 - Access key should be at least 3 characters, secret 8+ characters
 - Buckets are created automatically if not present
 - `MINIO_USE_SSL=false` is safe for internal Docker network

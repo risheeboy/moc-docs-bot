@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================================
 # Infrastructure Initialization Script
-# RAG-Based Hindi QA System - First-Time Setup
+# RAG-Based Hindi & English, Search & QA System - First-Time Setup
 # ============================================================================
 
 set -e

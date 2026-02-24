@@ -49,7 +49,7 @@
 ┌─────▼────────────────────────────▼──────┐
 │         Data Layer (Docker Volumes)      │
 │  ┌─────────┐ ┌──────────┐ ┌─────────┐   │
-│  │PostgreSQL│ │  Milvus  │ │ MinIO   │   │
+│  │PostgreSQL│ │  Milvus  │ │ S3   │   │
 │  │(metadata)│ │(vectors) │ │(objects)│   │
 │  └─────────┘ └──────────┘ └─────────┘   │
 │  ┌─────────┐ ┌──────────┐ ┌─────────┐   │
@@ -151,13 +151,13 @@
 **Process:**
 1. Scrapy crawls target URLs
 2. Playwright handles JavaScript rendering
-3. Documents stored in MinIO
+3. Documents stored in S3
 4. Marker extracts text from PDFs
 5. Sent to RAG service for embedding
 6. Vectors stored in Milvus
 7. Metadata in PostgreSQL
 
-**Storage Structure (MinIO §16):**
+**Storage Structure (S3 §16):**
 ```
 documents/raw/          → Raw HTML/PDF files
 documents/processed/    → Extracted text
@@ -187,7 +187,7 @@ documents/images/       → Extracted images
 - Session store
 - Database 0-3 (separate by purpose)
 
-**MinIO (object storage)**
+**S3 (object storage)**
 - Documents: 10TB allocated
 - Models: 500GB allocated
 - Backups: 2TB allocated
@@ -232,9 +232,9 @@ Target URLs (Ministry websites)
 [Data Ingestion Service]
     ↓ 1. Scrapy crawls (Playwright for JS)
     ↓ 2. Extracts HTML/PDF/DOCX
-    ↓ 3. Stores raw in MinIO/documents/raw/
+    ↓ 3. Stores raw in S3/documents/raw/
     ↓ 4. Parses with Marker
-    ↓ 5. Stores text in MinIO/documents/processed/
+    ↓ 5. Stores text in S3/documents/processed/
 [RAG Service]
     ↓ 1. Chunk text (512 tokens, overlap 64)
     ↓ 2. Embed chunks (BAAI/BGE-M3)
@@ -249,14 +249,14 @@ Target URLs (Ministry websites)
 ```
 [Admin] uploads training data (JSONL)
         ↓
-[MinIO] stores at s3://models/training_data/
+[S3] stores at s3://models/training_data/
         ↓
 [Model Training Service]
     ↓ 1. Download base model (Llama/Mistral)
     ↓ 2. Prepare LoRA adapters
     ↓ 3. Run training loop (3 epochs)
     ↓ 4. Save adapter + merged model
-    ↓ 5. Store in MinIO/models/finetuned/
+    ↓ 5. Store in S3/models/finetuned/
 [Model Evaluation]
     ↓ 1. Run on eval dataset
     ↓ 2. Calculate F1, BLEU, hallucination rate

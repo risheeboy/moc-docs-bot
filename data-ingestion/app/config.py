@@ -30,12 +30,11 @@ class Settings(BaseSettings):
         "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     )
 
-    # MinIO configuration
-    minio_endpoint: str = "minio:9000"
-    minio_access_key: str = "minioadmin"
-    minio_secret_key: str = "minioadmin"
-    minio_bucket_documents: str = "documents"
-    minio_use_ssl: bool = False
+    # AWS S3 configuration
+    aws_default_region: str = "ap-south-1"
+    aws_s3_bucket_documents: str = "ragqa-documents"
+    aws_s3_bucket_models: str = "ragqa-models"
+    aws_s3_bucket_backups: str = "ragqa-backups"
 
     # PostgreSQL configuration
     postgres_host: str = "postgres"
@@ -49,10 +48,11 @@ class Settings(BaseSettings):
     rag_chunk_size: int = 512
     rag_chunk_overlap: int = 64
 
-    # Redis configuration
+    # Redis/ElastiCache configuration
     redis_host: str = "redis"
     redis_port: int = 6379
     redis_password: Optional[str] = None
+    redis_ssl: bool = False
     redis_db_cache: int = 0
 
     # Scraper settings

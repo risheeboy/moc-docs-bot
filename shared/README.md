@@ -18,7 +18,7 @@ Shared libraries and utilities used across all backend services for the RAG-base
 - **RedisClient**: Redis cache operations (JSON serialization support)
 - **PostgresClient**: Async PostgreSQL connection pool
 - **MilvusClient**: Vector database operations
-- **MinIOClient**: Object storage operations (S3-compatible)
+- **S3Client**: Object storage operations (S3-compatible)
 
 ### Middleware (`rag_shared.middleware`)
 - **JSON Logging**: Structured logging with structlog (§6 of Shared Contracts)
@@ -51,7 +51,7 @@ Complete Pydantic Settings classes for all services:
 - App settings
 - Database connections (PostgreSQL, Milvus)
 - Cache (Redis)
-- Object storage (MinIO)
+- Object storage (S3)
 - LLM/RAG/Speech/Translation/OCR services
 - JWT, session, rate limit settings
 
@@ -178,7 +178,7 @@ words = tokenize_hindi("नमस्ते विश्व", level="word", remov
 - `redis==5.2.*`: Redis client
 - `asyncpg==0.30.*`: Async PostgreSQL
 - `pymilvus==2.4.*`: Milvus vector DB
-- `minio==7.2.*`: MinIO object storage
+- `minio==7.2.*`: S3 object storage
 - `python-jose[cryptography]==3.3.*`: JWT + encryption
 
 ## Testing
@@ -221,7 +221,7 @@ shared/
 │   │   ├── redis_client.py          # Redis helper
 │   │   ├── postgres_client.py       # PostgreSQL helper
 │   │   ├── milvus_client.py         # Milvus helper
-│   │   └── minio_client.py          # MinIO helper
+│   │   └── s3_client.py          # S3 helper
 │   ├── middleware/
 │   │   ├── __init__.py
 │   │   ├── logging.py               # JSON logging setup

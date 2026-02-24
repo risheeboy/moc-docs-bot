@@ -1,4 +1,4 @@
-# RAG-Based Hindi QA Chat Widget
+# RAG-Based Hindi & English, Search & QA Chat Widget
 
 Production-quality React 18 + TypeScript conversational chatbot widget for the Ministry of Culture website.
 

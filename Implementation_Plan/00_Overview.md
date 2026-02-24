@@ -5,7 +5,7 @@ See [README.md](README.md) for the file index.
 
 ---
 
-# RAG-Based Hindi QA System — Implementation Plan
+# RAG-Based Hindi & English, Search & QA System — Implementation Plan
 
 ## Project Overview
 
@@ -60,7 +60,7 @@ Both interfaces share the same API Gateway and backend services, but they call d
   │     │      │         │       │          │
   ▼     ▼      ▼         ▼       ▼          ▼
 ┌─────┐┌────────────────────┐┌──────┐┌──────┐┌──────┐
-│Milvus││  GPU (CUDA)        ││Tessr-││MinIO ││Redis │
+│Milvus││  GPU (CUDA)        ││Tessr-││S3 ││Redis │
 │VecDB ││  • Llama 3.1 8B   ││act + ││Object││Cache │
 │      ││  • Mistral NeMo12B ││Hindi ││Store ││      │
 │      ││  • Gemma 3 (multi) ││      ││      ││      │
@@ -92,7 +92,7 @@ Both interfaces share the same API Gateway and backend services, but they call d
 | Semantic Router | Routes queries to appropriate model | In API Gateway |
 | Vector DB | **Milvus** | `milvusdb/milvus:latest` |
 | Relational DB | PostgreSQL 16 | `postgres:16-alpine` |
-| Object Storage | **MinIO** | `minio/minio:latest` |
+| Object Storage | **S3** | `minio/minio:latest` |
 | Cache | Redis 7 | `redis:7-alpine` |
 | Speech-to-Text | **AI4Bharat IndicConformer** | Custom (`python:3.11-slim` + CUDA) |
 | Text-to-Speech | AI4Bharat IndicTTS / Coqui TTS | Custom (`python:3.11-slim`) |

@@ -1,4 +1,4 @@
-# Testing Suite — RAG-based Hindi QA System
+# Testing Suite — RAG-based Hindi & English, Search & QA System
 
 Complete end-to-end testing framework including integration tests, performance benchmarks, security scans, and UAT validation.
 
@@ -6,7 +6,7 @@ Complete end-to-end testing framework including integration tests, performance b
 
 ## Overview
 
-This testing suite validates the **RAG-based Hindi QA system for India's Ministry of Culture** across four dimensions:
+This testing suite validates the **RAG-based Hindi & English, Search & QA system for India's Ministry of Culture** across four dimensions:
 
 1. **Integration Tests** — End-to-end workflows (chat, search, voice, OCR, translation, feedback, document lifecycle)
 2. **Performance Tests** — Load testing and latency benchmarks (target: <5s p95)

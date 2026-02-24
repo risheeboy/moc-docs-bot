@@ -108,7 +108,7 @@ Response: Prometheus metrics (text/plain)
 - **text_splitter.py** — Hindi-aware sentence chunking
 - **cache_service.py** — Redis query result caching
 - **indexer.py** — Full ingestion pipeline
-- **minio_client.py** — MinIO S3 client
+- **s3_client.py** — S3 S3 client
 
 ## Configuration
 
@@ -127,7 +127,7 @@ REDIS_PORT=6379
 REDIS_PASSWORD=<secure>
 REDIS_DB_CACHE=0
 
-# MinIO Storage
+# S3 Storage
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=<key>
 MINIO_SECRET_KEY=<key>
@@ -202,7 +202,7 @@ Prometheus metrics exposed at `/metrics`:
 
 5. **Vision Search**: SigLIP embeds images in same space as text. Enables cross-modal retrieval.
 
-6. **MinIO Storage**: Raw documents stored at `documents/raw/{site}/{doc_id}`, processed text at `documents/processed/`, images at `documents/images/`.
+6. **S3 Storage**: Raw documents stored at `documents/raw/{site}/{doc_id}`, processed text at `documents/processed/`, images at `documents/images/`.
 
 ## Error Handling
 

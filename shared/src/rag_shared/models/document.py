@@ -39,9 +39,9 @@ class Document(BaseModel):
         default_factory=list,
         description="Search tags (heritage, monuments, etc)",
     )
-    minio_path: Optional[str] = Field(
+    s3_path: Optional[str] = Field(
         default=None,
-        description="MinIO storage path for raw document",
+        description="S3 storage path for raw document",
     )
 
     model_config = ConfigDict(from_attributes=True)

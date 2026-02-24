@@ -32,6 +32,7 @@ class PostgresSettings(BaseSettings):
     db: str = "ragqa"
     user: str = "ragqa_user"
     password: str
+    ssl_mode: str = "disable"
 
     model_config = SettingsConfigDict(
         env_prefix="POSTGRES_",
@@ -42,10 +43,13 @@ class PostgresSettings(BaseSettings):
     @property
     def dsn(self) -> str:
         """Construct PostgreSQL connection string."""
-        return (
+        dsn = (
             f"postgresql+asyncpg://{self.user}:{self.password}"
             f"@{self.host}:{self.port}/{self.db}"
         )
+        if self.ssl_mode != "disable":
+            dsn += f"?sslmode={self.ssl_mode}"
+        return dsn
 
 
 class LangfusePostgresSettings(BaseSettings):
@@ -65,7 +69,7 @@ class LangfusePostgresSettings(BaseSettings):
 
 
 class RedisSettings(BaseSettings):
-    """Redis settings."""
+    """Redis/ElastiCache settings."""
 
     host: str = "redis"
     port: int = 6379
@@ -74,6 +78,7 @@ class RedisSettings(BaseSettings):
     db_rate_limit: int = 1
     db_session: int = 2
     db_translation: int = 3
+    ssl: bool = False
 
     model_config = SettingsConfigDict(
         env_prefix="REDIS_",
@@ -84,29 +89,33 @@ class RedisSettings(BaseSettings):
     @property
     def url_cache(self) -> str:
         """Redis URL for cache database."""
+        protocol = "rediss" if self.ssl else "redis"
         return (
-            f"redis://:{self.password}@{self.host}:{self.port}/{self.db_cache}"
+            f"{protocol}://:{self.password}@{self.host}:{self.port}/{self.db_cache}"
         )
 
     @property
     def url_rate_limit(self) -> str:
         """Redis URL for rate limit database."""
+        protocol = "rediss" if self.ssl else "redis"
         return (
-            f"redis://:{self.password}@{self.host}:{self.port}/{self.db_rate_limit}"
+            f"{protocol}://:{self.password}@{self.host}:{self.port}/{self.db_rate_limit}"
         )
 
     @property
     def url_session(self) -> str:
         """Redis URL for session database."""
+        protocol = "rediss" if self.ssl else "redis"
         return (
-            f"redis://:{self.password}@{self.host}:{self.port}/{self.db_session}"
+            f"{protocol}://:{self.password}@{self.host}:{self.port}/{self.db_session}"
         )
 
     @property
     def url_translation(self) -> str:
         """Redis URL for translation cache database."""
+        protocol = "rediss" if self.ssl else "redis"
         return (
-            f"redis://:{self.password}@{self.host}:{self.port}/{self.db_translation}"
+            f"{protocol}://:{self.password}@{self.host}:{self.port}/{self.db_translation}"
         )
 
 
@@ -125,19 +134,16 @@ class MilvusSettings(BaseSettings):
     )
 
 
-class MinIOSettings(BaseSettings):
-    """MinIO object storage settings."""
+class S3Settings(BaseSettings):
+    """AWS S3 object storage settings."""
 
-    endpoint: str = "minio:9000"
-    access_key: str
-    secret_key: str
-    bucket_documents: str = "documents"
-    bucket_models: str = "models"
-    bucket_backups: str = "backups"
-    use_ssl: bool = False
+    bucket_documents: str = "ragqa-documents"
+    bucket_models: str = "ragqa-models"
+    bucket_backups: str = "ragqa-backups"
+    default_region: str = "ap-south-1"
 
     model_config = SettingsConfigDict(
-        env_prefix="MINIO_",
+        env_prefix="AWS_S3_",
         case_sensitive=False,
         env_file=".env",
     )
@@ -368,7 +374,7 @@ def get_settings() -> dict:
         "langfuse_postgres": LangfusePostgresSettings(),
         "redis": RedisSettings(),
         "milvus": MilvusSettings(),
-        "minio": MinIOSettings(),
+        "s3": S3Settings(),
         "jwt": JWTSettings(),
         "llm": LLMSettings(),
         "rag": RAGSettings(),

@@ -347,7 +347,7 @@ Result: ✓ Passing on all tested combinations
 
 **Certification Statement:**
 
-The RAG-Based Hindi QA System for the Ministry of Culture fully complies with:
+The RAG-Based Hindi & English, Search & QA System for the Ministry of Culture fully complies with:
 - GIGW (Government of India Websites) guidelines
 - WCAG 2.1 Level AA accessibility standards
 - IT Rules 2021 (Data Residency & Security)

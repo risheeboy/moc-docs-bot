@@ -57,7 +57,7 @@ class IngestImage(BaseModel):
     """Image extracted from document."""
     url: str = Field(..., description="Image URL")
     alt_text: Optional[str] = Field(default=None, description="Alternative text")
-    minio_path: str = Field(..., description="Path in MinIO storage")
+    s3_path: str = Field(..., description="Path in S3 storage")
 
 
 class IngestRequest(BaseModel):

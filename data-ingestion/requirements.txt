@@ -28,7 +28,7 @@ asyncpg==0.30.*
 sqlalchemy[asyncio]==2.0.*
 
 # Object storage
-minio==7.2.*
+boto3>=1.35.*
 
 # Caching and scheduling
 redis==5.2.*

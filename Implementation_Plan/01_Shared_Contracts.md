@@ -2,58 +2,87 @@
 
 **MANDATORY READING for ALL agents.** This file defines the shared contracts, naming conventions, data formats, and inter-service API schemas that every stream must follow to ensure consistency across the system.
 
+**DEPLOYMENT TARGET: AWS VPC** — All services deploy inside a VPC on Amazon ECS. Managed services: RDS PostgreSQL, ElastiCache Redis, S3 (not S3). APIs are internal to VPC only; web frontends are public via ALB. Authentication is disabled (VPC isolation provides security).
+
 ---
 
 ## 1. Service Registry
 
-All services communicate over the Docker network `rag-network`. Each service is reachable by its Docker Compose service name as hostname.
+**AWS Deployment:** Services communicate via AWS Cloud Map service discovery (`ragqa.local` private DNS namespace). Each service is reachable by `{service-name}.ragqa.local`.
 
-| Service | Docker Service Name | Internal Port | Internal Base URL | External Route (via NGINX) |
+**Local Development:** Services communicate over Docker network `rag-network` using Docker Compose service names.
+
+| Service | Cloud Map Name / Docker Name | Internal Port | Service Discovery URL | Public Route (via ALB) |
 |---|---|---|---|---|
-| API Gateway | `api-gateway` | 8000 | `http://api-gateway:8000` | `/api/*` |
-| RAG Service | `rag-service` | 8001 | `http://rag-service:8001` | — (internal only) |
-| LLM Service | `llm-service` | 8002 | `http://llm-service:8002` | — (internal only) |
-| Speech Service | `speech-service` | 8003 | `http://speech-service:8003` | — (internal only) |
-| Translation Service | `translation-service` | 8004 | `http://translation-service:8004` | — (internal only) |
-| OCR Service | `ocr-service` | 8005 | `http://ocr-service:8005` | — (internal only) |
-| Data Ingestion | `data-ingestion` | 8006 | `http://data-ingestion:8006` | — (internal only) |
-| Model Training | `model-training` | 8007 | `http://model-training:8007` | — (internal only) |
-| Chat Widget (SPA) | `chat-widget` | 80 | `http://chat-widget:80` | `/chat-widget/*` |
-| Search Page (SPA) | `search-page` | 80 | `http://search-page:80` | `/search/*` |
-| Admin Dashboard (SPA) | `admin-dashboard` | 80 | `http://admin-dashboard:80` | `/admin/*` |
-| PostgreSQL | `postgres` | 5432 | `postgres:5432` | — |
-| Redis | `redis` | 6379 | `redis:6379` | — |
-| Milvus | `milvus` | 19530 | `milvus:19530` | — |
-| etcd (Milvus dep) | `etcd` | 2379 | `etcd:2379` | — |
-| MinIO | `minio` | 9000 (API), 9001 (console) | `minio:9000` | — |
-| Prometheus | `prometheus` | 9090 | `http://prometheus:9090` | — |
-| Grafana | `grafana` | 3000 | `http://grafana:3000` | `/grafana` |
-| Langfuse | `langfuse` | 3001 | `http://langfuse:3001` | `/langfuse` |
-| Langfuse PostgreSQL | `langfuse-postgres` | 5433 | `langfuse-postgres:5433` | — |
-| Loki | `loki` | 3100 | `http://loki:3100` | — |
-| NVIDIA DCGM Exporter | `dcgm-exporter` | 9400 | `http://dcgm-exporter:9400` | — |
+| API Gateway | `api-gateway` | 8000 | `http://api-gateway.ragqa.local:8000` | `/api/*` (VPC-only via Internal ALB) |
+| RAG Service | `rag-service` | 8001 | `http://rag-service.ragqa.local:8001` | — (internal only) |
+| LLM Service | `llm-service` | 8002 | `http://llm-service.ragqa.local:8002` | — (internal only) |
+| Speech Service | `speech-service` | 8003 | `http://speech-service.ragqa.local:8003` | — (internal only) |
+| Translation Service | `translation-service` | 8004 | `http://translation-service.ragqa.local:8004` | — (internal only) |
+| OCR Service | `ocr-service` | 8005 | `http://ocr-service.ragqa.local:8005` | — (internal only) |
+| Data Ingestion | `data-ingestion` | 8006 | `http://data-ingestion.ragqa.local:8006` | — (internal only) |
+| Model Training | `model-training` | 8007 | `http://model-training.ragqa.local:8007` | — (internal only) |
+| Chat Widget (SPA) | `chat-widget` | 80 | `http://chat-widget.ragqa.local:80` | `/chat-widget/*` (Public ALB) |
+| Search Page (SPA) | `search-page` | 80 | `http://search-page.ragqa.local:80` | `/search/*` (Public ALB) |
+| Admin Dashboard (SPA) | `admin-dashboard` | 80 | `http://admin-dashboard.ragqa.local:80` | `/admin/*` (Public ALB) |
+| PostgreSQL | — (AWS RDS) | 5432 | RDS endpoint from Terraform output | — |
+| Redis | — (AWS ElastiCache) | 6379 | ElastiCache endpoint from Terraform output | — |
+| Milvus | `milvus` | 19530 | `http://milvus.ragqa.local:19530` | — |
+| Object Storage | — (AWS S3) | — | `s3://ragqa-documents`, `s3://ragqa-models`, `s3://ragqa-backups` | — |
+| Prometheus | `prometheus` | 9090 | `http://prometheus.ragqa.local:9090` | — |
+| Grafana | `grafana` | 3000 | `http://grafana.ragqa.local:3000` | `/grafana` (Public ALB) |
+| Langfuse | `langfuse` | 3001 | `http://langfuse.ragqa.local:3001` | `/langfuse` (Public ALB) |
+| Langfuse PostgreSQL | — (AWS RDS) | 5432 | RDS Langfuse endpoint from Terraform output | — |
 
 ---
 
-## 2. Docker Network & Volumes
+## 2. AWS Infrastructure & Storage
 
-**Network:** `rag-network` (bridge, all services attached)
+### 2.1 VPC Layout
 
-**Named Volumes:**
+| Subnet | CIDR | AZ | Purpose |
+|---|---|---|---|
+| Public Subnet A | 10.0.1.0/24 | ap-south-1a | ALB, NAT Gateway |
+| Public Subnet B | 10.0.2.0/24 | ap-south-1b | ALB (Multi-AZ) |
+| Private Subnet A | 10.0.10.0/24 | ap-south-1a | All ECS services, RDS, ElastiCache |
+| Private Subnet B | 10.0.11.0/24 | ap-south-1b | Multi-AZ replicas |
 
-| Volume Name | Used By | Purpose |
+- **Internet access for scraping:** Private subnets route outbound traffic through NAT Gateway
+- **Public web access:** ALB in public subnets forwards to frontend ECS services
+
+### 2.2 AWS Managed Services (replace self-hosted)
+
+| Component | AWS Service | Replaces |
 |---|---|---|
-| `postgres-data` | postgres | PostgreSQL data directory |
-| `langfuse-pg-data` | langfuse-postgres | Langfuse PostgreSQL data |
-| `milvus-data` | milvus | Milvus vector data |
-| `etcd-data` | etcd | Milvus metadata |
-| `redis-data` | redis | Redis AOF/RDB persistence |
-| `minio-data` | minio | MinIO object storage (10TB) |
-| `model-cache` | llm-service, speech-service, translation-service, model-training | Shared model weights cache |
-| `uploaded-docs` | api-gateway, rag-service, data-ingestion | Uploaded document staging |
-| `backup-data` | postgres, milvus, minio, redis | Backup storage |
-| `langfuse-data` | langfuse | Langfuse application data |
-| `loki-data` | loki | Log storage |
+| PostgreSQL | RDS PostgreSQL 16 (db.r6g.large, Multi-AZ) | Self-hosted PostgreSQL container |
+| Langfuse DB | RDS PostgreSQL 16 (db.t4g.medium) | langfuse-postgres container |
+| Redis | ElastiCache Redis 7.x (cache.r6g.large) | Self-hosted Redis container |
+| Object Storage | S3 (3 buckets) | S3 |
+| Container Registry | ECR (13 repositories) | — |
+| Load Balancer | ALB (public + internal) | NGINX |
+| DNS Discovery | Cloud Map (ragqa.local) | Docker network DNS |
+| Logs | CloudWatch Logs | Loki |
+| Secrets | Secrets Manager | .env file |
+
+### 2.3 S3 Buckets (replace S3)
+
+| Bucket | Purpose |
+|---|---|
+| `ragqa-documents` | Raw scraped documents, processed text, thumbnails, images |
+| `ragqa-models` | Base model weights, fine-tuned LoRA adapters, training/eval data |
+| `ragqa-backups` | RDS snapshots, Milvus snapshots, configuration backups |
+
+### 2.4 ECS Compute
+
+| Service Category | Compute | Instance Type |
+|---|---|---|
+| Frontends, API Gateway, OCR, Data Ingestion, Monitoring | ECS Fargate | Serverless |
+| LLM, Speech, Translation, Model Training | ECS on EC2 | g5.2xlarge (NVIDIA A10G GPU) |
+| Milvus | ECS Fargate + EFS | Serverless with persistent storage |
+
+### 2.5 Local Development (Docker Compose)
+
+For local development, `docker-compose.yml` uses local containers for PostgreSQL, Redis, and S3. The application code is designed to work with both local and AWS deployments via environment variables.
 
 ---
 
@@ -63,7 +92,7 @@ All services read configuration from environment variables. The master `.env` fi
 
 ### 3.1 Naming Convention
 
-- Prefix with service scope: `POSTGRES_`, `REDIS_`, `MILVUS_`, `MINIO_`, `LLM_`, `RAG_`, `SPEECH_`, `TRANSLATION_`, `OCR_`, `INGESTION_`, `APP_`, `JWT_`, `LANGFUSE_`
+- Prefix with service scope: `POSTGRES_`, `REDIS_`, `MILVUS_`, `AWS_S3_`, `LLM_`, `RAG_`, `SPEECH_`, `TRANSLATION_`, `OCR_`, `INGESTION_`, `APP_`, `JWT_`, `LANGFUSE_`
 - Use UPPER_SNAKE_CASE
 - Boolean values: `true` / `false` (lowercase strings)
 - Duration values: integer seconds (e.g., `SESSION_IDLE_TIMEOUT_SECONDS=1800`)
@@ -77,52 +106,53 @@ APP_DEBUG=false
 APP_LOG_LEVEL=INFO                          # DEBUG | INFO | WARNING | ERROR
 APP_SECRET_KEY=<random-256-bit-hex>         # Used for encryption at rest
 
-# ===== POSTGRES (main) =====
-POSTGRES_HOST=postgres
+# ===== POSTGRES (main — AWS RDS) =====
+POSTGRES_HOST=<rds-endpoint>.ap-south-1.rds.amazonaws.com
 POSTGRES_PORT=5432
 POSTGRES_DB=ragqa
 POSTGRES_USER=ragqa_user
-POSTGRES_PASSWORD=<secure>
+POSTGRES_PASSWORD=<from-secrets-manager>
+POSTGRES_SSL_MODE=require                   # RDS requires SSL
 
-# ===== POSTGRES (Langfuse) =====
-LANGFUSE_PG_HOST=langfuse-postgres
-LANGFUSE_PG_PORT=5433
+# ===== POSTGRES (Langfuse — AWS RDS) =====
+LANGFUSE_PG_HOST=<rds-langfuse-endpoint>.ap-south-1.rds.amazonaws.com
+LANGFUSE_PG_PORT=5432
 LANGFUSE_PG_DB=langfuse
 LANGFUSE_PG_USER=langfuse_user
-LANGFUSE_PG_PASSWORD=<secure>
+LANGFUSE_PG_PASSWORD=<from-secrets-manager>
 
-# ===== REDIS =====
-REDIS_HOST=redis
+# ===== REDIS (AWS ElastiCache) =====
+REDIS_HOST=<elasticache-endpoint>.cache.amazonaws.com
 REDIS_PORT=6379
-REDIS_PASSWORD=<secure>
+REDIS_PASSWORD=<from-secrets-manager>
+REDIS_SSL=true                              # ElastiCache in-transit encryption
 REDIS_DB_CACHE=0                            # Query result cache
 REDIS_DB_RATE_LIMIT=1                       # Rate limiter
 REDIS_DB_SESSION=2                          # Session store
 REDIS_DB_TRANSLATION=3                      # Translation cache
 
 # ===== MILVUS =====
-MILVUS_HOST=milvus
+MILVUS_HOST=milvus.ragqa.local
 MILVUS_PORT=19530
 MILVUS_COLLECTION_TEXT=ministry_text         # Text embeddings collection
 MILVUS_COLLECTION_IMAGE=ministry_images      # SigLIP image embeddings collection
 
-# ===== MINIO =====
-MINIO_ENDPOINT=minio:9000
-MINIO_ACCESS_KEY=<secure>
-MINIO_SECRET_KEY=<secure>
-MINIO_BUCKET_DOCUMENTS=documents             # Raw ingested documents
-MINIO_BUCKET_MODELS=models                   # Fine-tuned model weights
-MINIO_BUCKET_BACKUPS=backups                 # Backup archives
-MINIO_USE_SSL=false                          # Internal traffic; TLS at NGINX layer
+# ===== AWS S3 (replaces S3) =====
+AWS_DEFAULT_REGION=ap-south-1
+AWS_S3_BUCKET_DOCUMENTS=ragqa-documents      # Raw ingested documents
+AWS_S3_BUCKET_MODELS=ragqa-models            # Fine-tuned model weights
+AWS_S3_BUCKET_BACKUPS=ragqa-backups          # Backup archives
+# NOTE: No access keys needed — IAM roles provide credentials via instance metadata
 
-# ===== JWT =====
-JWT_SECRET_KEY=<secure-256-bit>
+# ===== AUTH =====
+AUTH_ENABLED=false                           # Disabled — VPC network isolation provides security
+JWT_SECRET_KEY=<secure-256-bit>              # Only used if AUTH_ENABLED=true
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
 JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
 
 # ===== LLM SERVICE =====
-LLM_SERVICE_URL=http://llm-service:8002
+LLM_SERVICE_URL=http://llm-service.ragqa.local:8002
 LLM_MODEL_STANDARD=meta-llama/Llama-3.1-8B-Instruct-AWQ
 LLM_MODEL_LONGCTX=mistralai/Mistral-NeMo-Instruct-2407-AWQ
 LLM_MODEL_MULTIMODAL=google/gemma-3-12b-it-awq
@@ -132,7 +162,7 @@ LLM_MAX_MODEL_LEN_LONGCTX=131072
 LLM_MAX_MODEL_LEN_MULTIMODAL=8192
 
 # ===== RAG SERVICE =====
-RAG_SERVICE_URL=http://rag-service:8001
+RAG_SERVICE_URL=http://rag-service.ragqa.local:8001
 RAG_EMBEDDING_MODEL=BAAI/bge-m3
 RAG_VISION_EMBEDDING_MODEL=google/siglip-so400m-patch14-384
 RAG_CHUNK_SIZE=512
@@ -143,30 +173,30 @@ RAG_CONFIDENCE_THRESHOLD=0.65               # Below this → chatbot fallback
 RAG_CACHE_TTL_SECONDS=3600                  # 1 hour default
 
 # ===== SPEECH SERVICE =====
-SPEECH_SERVICE_URL=http://speech-service:8003
+SPEECH_SERVICE_URL=http://speech-service.ragqa.local:8003
 SPEECH_STT_MODEL=ai4bharat/indicconformer-hi-en
 SPEECH_TTS_HINDI_MODEL=ai4bharat/indic-tts-hindi
 SPEECH_TTS_ENGLISH_MODEL=coqui/tts-english
 SPEECH_SAMPLE_RATE=16000
 
 # ===== TRANSLATION SERVICE =====
-TRANSLATION_SERVICE_URL=http://translation-service:8004
+TRANSLATION_SERVICE_URL=http://translation-service.ragqa.local:8004
 TRANSLATION_MODEL=ai4bharat/indictrans2-indic-en-1B
 TRANSLATION_CACHE_TTL_SECONDS=86400         # 24 hours
 
 # ===== OCR SERVICE =====
-OCR_SERVICE_URL=http://ocr-service:8005
+OCR_SERVICE_URL=http://ocr-service.ragqa.local:8005
 OCR_TESSERACT_LANG=hin+eng
 OCR_EASYOCR_LANGS=hi,en
 
 # ===== DATA INGESTION =====
-INGESTION_SERVICE_URL=http://data-ingestion:8006
+INGESTION_SERVICE_URL=http://data-ingestion.ragqa.local:8006
 INGESTION_SCRAPE_INTERVAL_HOURS=24
 INGESTION_MAX_CONCURRENT_SPIDERS=4
 INGESTION_RESPECT_ROBOTS_TXT=true
 
 # ===== MODEL TRAINING =====
-TRAINING_SERVICE_URL=http://model-training:8007
+TRAINING_SERVICE_URL=http://model-training.ragqa.local:8007
 TRAINING_LORA_RANK=16
 TRAINING_LORA_ALPHA=32
 TRAINING_LEARNING_RATE=2e-4
@@ -174,7 +204,7 @@ TRAINING_EPOCHS=3
 TRAINING_BATCH_SIZE=4
 
 # ===== LANGFUSE =====
-LANGFUSE_HOST=http://langfuse:3001
+LANGFUSE_HOST=http://langfuse.ragqa.local:3001
 LANGFUSE_PUBLIC_KEY=<key>
 LANGFUSE_SECRET_KEY=<key>
 
@@ -196,13 +226,14 @@ RATE_LIMIT_EDITOR=90
 RATE_LIMIT_VIEWER=30
 RATE_LIMIT_API_CONSUMER=60
 
-# ===== NGINX / TLS =====
-NGINX_DOMAIN=culture.gov.in
-NGINX_SSL_CERT_PATH=/etc/nginx/ssl/cert.pem
-NGINX_SSL_KEY_PATH=/etc/nginx/ssl/key.pem
+# ===== ALB / TLS (replaces NGINX) =====
+# TLS termination handled by AWS ALB with ACM certificate
+ALB_DOMAIN=culture.gov.in
 CORS_ALLOWED_ORIGINS=https://culture.gov.in,https://www.culture.gov.in
 
-# ===== GPU =====
+# ===== GPU (EC2 instances) =====
+# GPU instances use g5.2xlarge with NVIDIA A10G
+# NVIDIA drivers and CUDA are pre-installed via ECS-optimized GPU AMI
 NVIDIA_DRIVER_MIN_VERSION=535
 CUDA_MIN_VERSION=12.1
 ```
@@ -466,7 +497,7 @@ These are the exact request/response schemas for calls **between** backend servi
       "source_site": "asi.nic.in",
       "language": "en",
       "content_type": "webpage",
-      "thumbnail_url": "https://minio:9000/documents/thumb_123.jpg",
+      "thumbnail_url": "https://s3/documents/thumb_123.jpg",
       "published_date": "2025-06-15"
     }
   ],
@@ -517,7 +548,7 @@ These are the exact request/response schemas for calls **between** backend servi
     {
       "url": "https://...",
       "alt_text": "...",
-      "minio_path": "documents/img_123.jpg"
+      "s3_path": "documents/img_123.jpg"
     }
   ]
 }
@@ -946,7 +977,7 @@ redis==5.2.*
 asyncpg==0.30.*
 sqlalchemy[asyncio]==2.0.*
 pymilvus==2.4.*
-minio==7.2.*
+boto3==1.35.*
 langfuse==2.56.*
 python-multipart==0.0.18
 python-jose[cryptography]==3.3.*
@@ -1003,10 +1034,12 @@ Frontend streams 8, 9, and 11 must define TypeScript interfaces matching the JSO
 
 ---
 
-## 16. MinIO Bucket Structure
+## 16. S3 Bucket Structure (replaces S3)
+
+All object storage uses AWS S3. Services access S3 via `boto3` with IAM role credentials (no access keys).
 
 ```
-documents/
+s3://ragqa-documents/
 ├── raw/                    # Raw scraped HTML/PDF/DOCX files
 │   └── {source_site}/{document_id}.{ext}
 ├── processed/              # Extracted text after parsing
@@ -1016,7 +1049,7 @@ documents/
 └── images/                 # Extracted images from documents/websites
     └── {document_id}/{image_id}.{ext}
 
-models/
+s3://ragqa-models/
 ├── base/                   # Base model weights (downloaded once)
 │   ├── llama-3.1-8b-instruct-awq/
 │   ├── mistral-nemo-instruct-awq/
@@ -1028,16 +1061,19 @@ models/
 └── eval_data/              # Evaluation benchmark datasets
     └── {benchmark_name}.jsonl
 
-backups/
-├── postgres/               # pg_dump archives
-│   └── {date}/ragqa_backup.sql.gz
-├── milvus/                 # Milvus snapshots
+s3://ragqa-backups/
+├── rds-snapshots/          # RDS automated snapshots (managed by AWS)
+├── milvus/                 # Milvus EFS snapshots
 │   └── {date}/
-├── redis/                  # Redis RDB dumps
-│   └── {date}/dump.rdb
-└── minio/                  # MinIO bucket sync (documents only)
+└── config/                 # Configuration backups
     └── {date}/
 ```
+
+**S3 Lifecycle Policies:**
+- Standard → Infrequent Access after 90 days
+- Infrequent Access → Glacier after 365 days
+- Versioning enabled on all buckets
+- Server-side encryption (AES-256)
 
 ---
 

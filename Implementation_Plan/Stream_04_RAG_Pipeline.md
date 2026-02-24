@@ -54,17 +54,17 @@ rag-service/
 **Key technical decisions (from Design):**
 - **Embedding model:** `BAAI/bge-m3` — provides dense, sparse (lexical), AND ColBERT representations in a single model, enabling native hybrid search
 - **Vision embeddings:** `SigLIP` — for indexing images extracted from documents/websites to support multimodal search results
-- **Vector DB:** **Milvus** (standalone mode with etcd + MinIO) — supports hybrid search natively
+- **Vector DB:** **Milvus** (standalone mode with etcd + S3) — supports hybrid search natively
 - **RAG framework:** **LlamaIndex** — VectorStoreIndex backed by Milvus, with custom Hindi-aware node parsers
 - **PDF parsing:** **Marker** — high-quality PDF-to-markdown conversion preserving structure, tables, formulas
 - **Chunk size:** 512 tokens with 64-token overlap; Hindi-aware sentence boundary detection
 - **Retrieval strategy:** BGE-M3 hybrid (dense + sparse) with reciprocal rank fusion, followed by cross-encoder reranking
 
-**Communicates with:** Milvus (via pymilvus), MinIO (for stored documents). Called by API Gateway via HTTP.
+**Communicates with:** Milvus (via pymilvus), S3 (for stored documents). Called by API Gateway via HTTP.
 
 **Shared Contracts Reference (from `01_Shared_Contracts.md`):**
 - §1 Service Registry: this service runs on port 8001 as `rag-service`
-- §3 Environment Variables: read `RAG_*`, `MILVUS_*`, `REDIS_*`, `MINIO_*` variables
+- §3 Environment Variables: read `RAG_*`, `MILVUS_*`, `REDIS_*`, `AWS_S3_*` variables
 - §4 Error Response Format: use standard error format from §4
 - §5 Health Check Format: `/health` must check Milvus and Redis connectivity, return format from §5
 - §6 Log Format: use structured JSON logging via `rag_shared.middleware.logging`
@@ -72,7 +72,7 @@ rag-service/
 - §8.1 API Contracts: implement exact request/response schemas for `/query`, `/search`, `/ingest` from §8.1
 - §9 Language Codes: use standard language codes
 - §11 Prometheus Metrics: expose `rag_retrieval_duration_seconds`, `rag_cache_hit_total`, `rag_cache_miss_total`
-- §16 MinIO Buckets: store documents in `documents/raw/`, `documents/processed/`, `documents/images/` paths
+- §16 S3 Buckets: store documents in `documents/raw/`, `documents/processed/`, `documents/images/` paths
 
 ---
 
@@ -81,7 +81,7 @@ rag-service/
 ### Agent 4: RAG Pipeline (LlamaIndex + Milvus + BGE-M3)
 ```
 PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
-Port 8001. Use exact API schemas from §8.1, env vars from §3, MinIO paths from §16.
+Port 8001. Use exact API schemas from §8.1, env vars from §3, S3 paths from §16.
 
 Build a FastAPI RAG service using LlamaIndex framework with:
 - Document ingestion: PDF (via Marker), DOCX, HTML, TXT

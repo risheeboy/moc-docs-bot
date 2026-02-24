@@ -8,7 +8,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'en'
+    const savedLanguage = localStorage.getItem('language') || 'hi'
     i18n.changeLanguage(savedLanguage)
     document.documentElement.lang = savedLanguage
     setIsLoading(false)
