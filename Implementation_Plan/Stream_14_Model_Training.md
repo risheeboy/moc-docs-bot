@@ -62,6 +62,13 @@ model-training/
 
 ---
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: this service runs on port 8007 as `model-training`
+- §3 Environment Variables: read `TRAINING_*`, `MINIO_*`, `LLM_MODEL_STANDARD`, `LLM_MODEL_LONGCTX` variables
+- §4 Error Response Format: use standard error format from §4
+- §5 Health Check Format: `/health` must check GPU availability and MinIO connectivity
+- §8.7 API Contract: implement exact `/finetune/start`, `/finetune/status`, `/evaluate` schemas from §8.7
+- §16 MinIO Buckets: store fine-tuned models at `models/finetuned/{model_id}/{version}/`, training data at `models/training_data/`, eval data at `models/eval_data/`
 
 ---
 
@@ -69,6 +76,9 @@ model-training/
 
 ### Agent 14: Model Fine-Tuning & Evaluation (**NEW**)
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Port 8007. Use API schemas from §8.7, MinIO paths from §16, env vars from §3.
+
 Build a model fine-tuning pipeline for domain adaptation:
 - QLoRA (4-bit LoRA) fine-tuning of Llama 3.1 8B and Mistral NeMo on
   Ministry of Culture domain data

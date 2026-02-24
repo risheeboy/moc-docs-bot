@@ -75,6 +75,14 @@ frontend/chat-widget/
 
 ---
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: API calls go to `/api/v1/*` (via NGINX reverse proxy to api-gateway:8000)
+- §4 Error Response Format: handle error responses in `{"error": {...}}` format from §4
+- §9 Language Codes: language selector must support all 23 codes from §9 (at minimum `hi` and `en` prominently)
+- §10 TypeScript Conventions: use `snake_case` field names matching API responses (no camelCase conversion)
+- §13 Chatbot Fallback: display exact fallback messages from §13 when API returns fallback
+- §15 Frontend Standards: use React 18, TypeScript 5.6+, Vite 6+, i18next, react-markdown, eventsource-parser
+- §18 GIGW Elements: implement all 7 mandatory GIGW elements from §18
 
 ---
 
@@ -84,6 +92,9 @@ frontend/chat-widget/
 ```
 Build a React 18 + TypeScript CONVERSATIONAL CHATBOT widget embeddable via
 <script> tag on culture.gov.in (Drupal).
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+API base: /api/v1. Use TypeScript conventions from §10, GIGW from §18, deps from §15.
+
 Use Shadow DOM encapsulation to prevent CSS conflicts with host Drupal site.
 Features: multi-turn chat with context memory, text + voice input,
 SSE streaming responses, markdown rendering, source citations with clickable

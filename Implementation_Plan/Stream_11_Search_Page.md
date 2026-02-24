@@ -73,6 +73,15 @@ frontend/search-page/
 
 **No code dependencies on other streams** — calls `/api/v1/search` and `/api/v1/translate` endpoints.
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: API calls go to `/api/v1/search`, `/api/v1/search/suggest`, `/api/v1/translate`, `/api/v1/feedback`
+- §4 Error Response Format: handle `{"error": {...}}` format from §4
+- §8.1 Search API Response: TypeScript interfaces must match the `/search` response schema from §8.1 (results, multimedia, events arrays)
+- §9 Language Codes: language toggle must support all 23 codes from §9
+- §10 TypeScript Conventions: `snake_case` fields, no camelCase conversion
+- §15 Frontend Standards: React 18, TypeScript 5.6+, Vite 6+, i18next, react-markdown, eventsource-parser
+- §18 GIGW Elements: implement all 7 mandatory GIGW elements from §18
+
 ---
 
 
@@ -82,6 +91,9 @@ frontend/search-page/
 
 ### Agent 11: Unified Semantic Search Page (**NEW**)
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+API: /api/v1/search. TypeScript interfaces must match §8.1 search response schema.
+Use GIGW from §18, deps from §15, language codes from §9.
 Build a React 18 + TypeScript UNIFIED SEMANTIC SEARCH PAGE as a standalone SPA.
 This is a SEPARATE interface from the chatbot — a full-page search experience.
 Features:

@@ -45,6 +45,17 @@ shared/
 
 **No dependencies** — imported by Streams 3, 4, 5, 6, 7, 12, 13.
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §3 Environment Variables: `config.py` must define Pydantic Settings classes reading ALL env vars from §3.2
+- §4 Error Response Format: define `ErrorResponse` and `ErrorDetail` Pydantic models exactly as in §4
+- §5 Health Check Format: define `HealthResponse` and `DependencyHealth` models exactly as in §5
+- §6 Log Format: `middleware/logging.py` must implement `setup_json_logging(service_name)` producing the exact JSON format from §6
+- §7 Request ID: `clients/base_client.py` must propagate `X-Request-ID` header on all outbound HTTP calls
+- §9 Language Codes: `models/language.py` must define Language enum with all 23 codes from §9
+- §10 Conventions: all Pydantic models use `snake_case`, `ConfigDict(from_attributes=True)`, UUIDs as `uuid.UUID`
+- §11 Prometheus Metrics: `middleware/metrics.py` must provide automatic HTTP metrics instrumentation (the 4 standard metrics from §11)
+- §14 Python Versions: pinned dependency versions from §14 become this package's dependencies
+
 ---
 
 
@@ -54,6 +65,9 @@ shared/
 
 ### Agent 10: Shared Libraries
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+This package implements the shared contracts. Models from §4-5, logging from §6,
+request ID propagation from §7, language enum from §9, metrics from §11, deps from §14.
 Create a Python package 'rag-shared' with:
 - Language enum (all 22 scheduled Indian languages + English)
 - Shared Pydantic models: ChatMessage, Source, SearchResult,

@@ -70,6 +70,13 @@ testing/
 
 ---
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: tests must call services at the exact ports defined in §1
+- §4 Error Response Format: validate all services return errors in the exact format from §4
+- §5 Health Check Format: validate all services return health in the exact format from §5
+- §8 Inter-Service Contracts: integration tests should validate request/response schemas from §8.1-8.7
+- §12 RBAC: security tests must verify all 4 roles have correct access per §12
+- §13 Chatbot Fallback: test that low-confidence responses trigger exact fallback messages from §13
 
 ---
 
@@ -77,6 +84,9 @@ testing/
 
 ### Agent 15: Integration, Performance & Security Testing (**NEW**)
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Tests must validate contracts from §4 (errors), §5 (health), §8 (API schemas), §12 (RBAC).
+
 Build comprehensive test suite (runs against fully deployed system):
 INTEGRATION: E2E tests for chat flow, search flow, voice flow, OCR flow,
   translation flow, feedback→sentiment flow, document lifecycle (upload→ingest→

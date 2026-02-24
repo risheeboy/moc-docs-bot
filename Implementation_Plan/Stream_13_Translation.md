@@ -41,6 +41,15 @@ translation-service/
 
 **Requires:** GPU for IndicTrans2 inference. No code dependencies on other streams.
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: this service runs on port 8004 as `translation-service`
+- §3 Environment Variables: read `TRANSLATION_*`, `REDIS_*` (DB 3 for translation cache) variables
+- §4 Error Response Format: use standard error format; use `INVALID_LANGUAGE` for unsupported pairs
+- §5 Health Check Format: `/health` must check GPU and Redis connectivity
+- §8.4 API Contract: implement exact `/translate`, `/translate/batch`, `/detect` schemas from §8.4
+- §9 Language Codes: support all 23 codes from §9
+- §11 Prometheus Metrics: expose `translation_duration_seconds`, `translation_cache_hit_total`
+
 ---
 
 
@@ -50,6 +59,9 @@ translation-service/
 
 ### Agent 13: Translation Service (**NEW**)
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Port 8004. Use exact API schemas from §8.4, all 23 language codes from §9.
+Redis DB 3 for cache per §3.2.
 Build a FastAPI translation microservice wrapping AI4Bharat IndicTrans2.
 - POST /translate (single text translation between any pair of 22 scheduled
   Indian languages + English)

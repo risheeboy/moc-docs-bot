@@ -55,6 +55,16 @@ llm-service/
 
 ---
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: this service runs on port 8002 as `llm-service`
+- §3 Environment Variables: read `LLM_*` variables (model IDs, GPU memory, max model len)
+- §4 Error Response Format: use standard error format; use `MODEL_LOADING` code when model not yet loaded
+- §5 Health Check Format: `/health` must report per-model loaded status, return format from §5
+- §6 Log Format: structured JSON logging with service name `llm-service`
+- §7 Request ID: accept and propagate `X-Request-ID`
+- §8.2 API Contract: implement exact OpenAI-compatible `/v1/chat/completions` schema from §8.2
+- §11 Prometheus Metrics: expose `llm_tokens_generated_total`, `llm_inference_duration_seconds`, `llm_model_loaded` (gauge)
+- §14 Python Versions: use pinned dependency versions from §14
 
 ---
 
@@ -63,6 +73,9 @@ llm-service/
 ### Agent 5: LLM Service (Multi-Model vLLM)
 ```
 Build multi-model LLM inference service using vLLM with OpenAI-compatible API.
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Port 8002. Use OpenAI-compatible API from §8.2, env vars from §3, metrics from §11.
+
 Three models:
 - Llama 3.1 8B Instruct (AWQ 4-bit) — standard Q&A, chatbot, sentiment
 - Mistral NeMo 12B (AWQ 4-bit) — summarization, long documents (128K context)

@@ -114,8 +114,16 @@ api-gateway/
 - Image/multimodal queries → **Gemma 3** (vision-language)
 - Translation requests → **IndicTrans2** (dedicated translation model)
 
----
-
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: call downstream services at exact URLs listed (rag-service:8001, llm-service:8002, speech-service:8003, translation-service:8004, ocr-service:8005, data-ingestion:8006, model-training:8007)
+- §3 Environment Variables: read all `*_SERVICE_URL`, `JWT_*`, `REDIS_*`, `POSTGRES_*`, `SESSION_*`, `RATE_LIMIT_*`, `RETENTION_*`, `RAG_CONFIDENCE_THRESHOLD`, `CORS_ALLOWED_ORIGINS`, `LANGFUSE_*` variables
+- §4 Error Response Format: ALL error responses must use the exact `{"error": {"code": "...", "message": "...", "details": {}, "request_id": "..."}}` format from §4
+- §5 Health Check Format: `/api/v1/health` must aggregate health from all downstream services using the format from §5
+- §6 Log Format: use structured JSON logging via `rag_shared.middleware.logging`
+- §7 Request ID: generate UUID v4 `X-Request-ID`, propagate to all downstream calls, return in response headers
+- §8 Inter-Service API Contracts: use exact request/response schemas from §8.1-8.7 for all downstream calls
+- §12 RBAC: enforce roles/permissions as defined in §12
+- §13 Chatbot Fallback: use exact fallback messages from §13
 
 ---
 
@@ -123,6 +131,10 @@ api-gateway/
 
 ### Agent 3: API Gateway + Semantic Router
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Use exact service URLs from §1, error format from §4, health format from §5,
+API contracts from §8, RBAC from §12, fallback messages from §13.
+
 Build a FastAPI API gateway with:
 - Semantic Router: classifies queries and routes to correct LLM
   (factual→Llama 3.1 8B, long-context→Mistral NeMo 12B,

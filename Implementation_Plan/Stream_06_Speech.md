@@ -47,6 +47,15 @@ speech-service/
 
 ---
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: this service runs on port 8003 as `speech-service`
+- §3 Environment Variables: read `SPEECH_*` variables
+- §4 Error Response Format: use standard error format; use `INVALID_AUDIO_FORMAT` for unsupported audio
+- §5 Health Check Format: `/health` must check GPU availability, return format from §5
+- §6 Log Format: structured JSON logging with service name `speech-service`
+- §8.3 API Contract: implement exact `/stt` and `/tts` schemas from §8.3
+- §9 Language Codes: accept language codes from §9 (at minimum `hi` and `en`)
+- §11 Prometheus Metrics: expose `speech_stt_duration_seconds`, `speech_tts_duration_seconds`
 
 ---
 
@@ -55,6 +64,9 @@ speech-service/
 ### Agent 6: Speech Service (IndicConformer + IndicTTS)
 ```
 Build a FastAPI speech service with:
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Port 8003. Use exact STT/TTS API schemas from §8.3, language codes from §9.
+
 - STT using AI4Bharat IndicConformer (purpose-built for Indian languages)
   for Hindi + English transcription
 - TTS using AI4Bharat IndicTTS for Hindi voice synthesis

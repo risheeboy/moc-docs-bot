@@ -53,8 +53,13 @@ database/
 
 **No dependencies** — schema is self-contained.
 
----
-
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §3 Environment Variables: use `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+- §9 Language Codes: `language` columns must accept all 23 codes listed in §9
+- §10 Conventions: all column names `snake_case`, timestamps as `TIMESTAMPTZ` (UTC), UUIDs as `UUID` type
+- §12 RBAC: four roles (admin, editor, viewer, api_consumer) with permissions as defined
+- §3.2 Rate Limits: `system_config` seed must include `RATE_LIMIT_ADMIN=120`, `RATE_LIMIT_EDITOR=90`, `RATE_LIMIT_VIEWER=30`, `RATE_LIMIT_API_CONSUMER=60`
+- §3.2 Data Retention: `system_config` seed must include retention periods: conversations=90d, feedback=365d, audit_log=730d
 
 ---
 
@@ -62,6 +67,9 @@ database/
 
 ### Agent 2: Database
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Use exact language codes from §9, RBAC roles from §12, retention periods from §3.2.
+
 Create PostgreSQL 16 schema with tables: users, roles, permissions,
 sessions, conversations, documents, document_chunks, feedback (with
 sentiment_score + sentiment_label columns), audit_log, analytics_events,

@@ -65,8 +65,14 @@ infrastructure/
 
 **No dependencies on other streams.**
 
----
-
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: use exact Docker service names and ports listed there
+- §2 Docker Network & Volumes: network name `rag-network`, volume names as listed
+- §3 Environment Variables: `.env.example` must contain ALL variables from §3.2
+- §11 Prometheus Metrics: scrape all services at `<service>:<port>/metrics`
+- §17 Docker Labels: apply `com.ragqa.*` labels to all services
+- DCGM Exporter: `dcgm-exporter` on port 9400
+- Grafana: port 3000, Langfuse: port 3001, Prometheus: port 9090, Loki: port 3100
 
 ---
 
@@ -74,6 +80,9 @@ infrastructure/
 
 ### Agent 1: Infrastructure
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Use exact service names, ports, volume names, and env vars from 01_Shared_Contracts.md §1-3.
+
 Create Docker Compose infrastructure for a multi-service RAG application.
 docker-compose.yml at project root (rag-qa-hindi/docker-compose.yml).
 Services: nginx, api-gateway, rag-service, llm-service (vLLM), speech-service,

@@ -47,6 +47,13 @@ frontend/admin-dashboard/
 
 **No code dependencies on other streams.**
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: API calls go to `/api/v1/*` (NGINX → api-gateway:8000)
+- §4 Error Response Format: handle `{"error": {...}}` format from §4
+- §10 TypeScript Conventions: `snake_case` fields, no camelCase conversion
+- §12 RBAC: dashboard is admin-only; handle 403 responses for unauthorized routes
+- §15 Frontend Standards: React 18, TypeScript 5.6+, Vite 6+, Recharts, React Router, TanStack Table
+
 ---
 
 
@@ -56,6 +63,8 @@ frontend/admin-dashboard/
 
 ### Agent 9: Admin Dashboard
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+API base: /api/v1. Use deps from §15, TypeScript conventions from §10.
 Build a React 18 + TypeScript admin dashboard with pages for: login,
 KPI dashboard (query volume, response time, active sessions, satisfaction),
 analytics (language dist, topic trends, model usage via Langfuse),

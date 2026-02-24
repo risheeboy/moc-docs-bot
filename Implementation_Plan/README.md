@@ -4,17 +4,22 @@ The implementation plan has been split into individual files so that each sub-ag
 
 ## How to Use
 
-- **Every agent** should read `00_Overview.md` first (architecture, tech stack, interfaces)
-- **Each stream agent** should then read its own `Stream_XX_*.md` file (contains both the stream spec AND the agent prompt)
-- **For cross-stream context**, see `17_Dependency_Graph.md`
-- **For requirements traceability**, see `18_NFR_Checklist.md`
-- **For final structure**, see `19_Execution_and_Structure.md`
+1. **Every agent MUST read first:**
+   - `00_Overview.md` — architecture, tech stack, interfaces
+   - `01_Shared_Contracts.md` — **MANDATORY** service ports, env vars, API schemas, error formats, health checks, log format, language codes, dependency versions
+2. **Each stream agent** reads its own `Stream_XX_*.md` file (contains both the stream spec AND the agent prompt)
+3. **For cross-stream context**, see `17_Dependency_Graph.md`
+4. **For requirements traceability**, see `18_NFR_Checklist.md`
+5. **For final structure**, see `19_Execution_and_Structure.md`
+
+> **CRITICAL:** All agents must follow the shared contracts exactly. Do not invent your own port numbers, env var names, error formats, or API schemas. The contracts in `01_Shared_Contracts.md` are the single source of truth for inter-service communication.
 
 ## Files
 
 | File | Description | Lines |
 |---|---|---|
 | [00_Overview.md](00_Overview.md) | Project overview, architecture, tech stack | 115 |
+| [01_Shared_Contracts.md](01_Shared_Contracts.md) | **MANDATORY** Service registry, env vars, API contracts, error/health/log formats | ~550 |
 | [Stream_01_Infrastructure.md](Stream_01_Infrastructure.md) | Docker Compose, NGINX, monitoring, backups + Agent prompt | 105 |
 | [Stream_02_Database.md](Stream_02_Database.md) | PostgreSQL schema, migrations, RBAC + Agent prompt | 87 |
 | [Stream_03_API_Gateway.md](Stream_03_API_Gateway.md) | FastAPI, semantic routing, auth, RBAC + Agent prompt | 161 |

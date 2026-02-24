@@ -62,6 +62,14 @@ docs/
 
 ---
 
+**Shared Contracts Reference (from `01_Shared_Contracts.md`):**
+- §1 Service Registry: document all service names and ports from §1 in deployment guide
+- §3 Environment Variables: CONFIGURATION.md must document ALL variables from §3.2 with descriptions
+- §4 Error Response Format: API_Reference.md must document the standard error format from §4
+- §5 Health Check Format: document health check endpoints and format from §5
+- §8 Inter-Service Contracts: API_Reference.md must include all inter-service schemas from §8.1-8.7
+- §12 RBAC: SECURITY_GUIDE.md must document the 4 roles and their permissions from §12
+- §16 MinIO Buckets: BACKUP_RESTORE.md must document the bucket structure from §16
 
 ---
 
@@ -69,6 +77,10 @@ docs/
 
 ### Agent 16: Documentation & Deliverables (**NEW**)
 ```
+PREREQUISITE: Read 00_Overview.md and 01_Shared_Contracts.md first.
+Document all contracts: env vars from §3, API schemas from §8, RBAC from §12.
+CONFIGURATION.md must list every env var from §3.2.
+
 Generate all RFP-required documentation deliverables:
 - API documentation: export FastAPI OpenAPI spec (openapi.yaml) + human-readable
   API_Reference.md with request/response examples
