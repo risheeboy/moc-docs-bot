@@ -17,8 +17,14 @@ class TestHealth:
         response = client.get("/health")
         assert response.status_code in [200, 503]  # 503 if Milvus unavailable
         data = response.json()
-        assert "status" in data
-        assert data["service"] == "rag-service"
+        # 503 wraps the response in a "detail" key
+        if response.status_code == 503:
+            assert "detail" in data
+            assert "status" in data["detail"]
+            assert data["detail"]["service"] == "rag-service"
+        else:
+            assert "status" in data
+            assert data["service"] == "rag-service"
 
     def test_health_check_has_required_fields(self, client):
         """Test health check response has all required fields."""

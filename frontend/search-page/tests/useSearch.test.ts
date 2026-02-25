@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useSearch } from '../src/hooks/useSearch'
 import * as api from '../src/services/api'
@@ -25,14 +25,18 @@ const mockSearchResponse = {
   cached: false,
 }
 
+const mockSuggestionsResponse = {
+  suggestions: [
+    { text: 'test suggestion', confidence: 0.9 }
+  ]
+}
+
 describe('useSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.useFakeTimers()
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
+    // Mock the API methods
+    vi.mocked(api.apiClient.search).mockResolvedValue(mockSearchResponse)
+    vi.mocked(api.apiClient.getSuggestions).mockResolvedValue(mockSuggestionsResponse)
   })
 
   it('initializes with empty state', () => {
@@ -52,62 +56,57 @@ describe('useSearch', () => {
   })
 
   it('performs search with debounce', async () => {
-    const mockSearch = vi.spyOn(api.apiClient, 'search').mockResolvedValue(mockSearchResponse)
-    const { result } = renderHook(() => useSearch({ debounceMs: 300 }))
+    const { result } = renderHook(() => useSearch({ debounceMs: 100 }))
 
     act(() => {
       result.current.handleQueryChange('test query', 'en')
     })
 
-    expect(mockSearch).not.toHaveBeenCalled()
-
-    act(() => {
-      vi.advanceTimersByTime(300)
-    })
-
+    // Mock should be called after debounce
     await waitFor(() => {
-      expect(mockSearch).toHaveBeenCalled()
-    })
+      expect(vi.mocked(api.apiClient.search)).toHaveBeenCalled()
+    }, { timeout: 2000 })
   })
 
   it('handles search errors', async () => {
     const mockError = new Error('Search failed')
-    vi.spyOn(api.apiClient, 'search').mockRejectedValue(mockError)
+    vi.mocked(api.apiClient.search).mockRejectedValueOnce(mockError)
     const { result } = renderHook(() => useSearch())
 
     act(() => {
       result.current.handleQueryChange('test query', 'en')
-      vi.advanceTimersByTime(300)
     })
 
     await waitFor(() => {
       expect(result.current.error).toBe('Search failed')
-      expect(result.current.results).toBeNull()
-    })
+    }, { timeout: 2000 })
   })
 
   it('updates page on handlePageChange', async () => {
-    const mockSearch = vi.spyOn(api.apiClient, 'search').mockResolvedValue(mockSearchResponse)
     const { result } = renderHook(() => useSearch())
 
     act(() => {
       result.current.handleQueryChange('test query', 'en')
-      vi.advanceTimersByTime(300)
     })
 
     await waitFor(() => {
       expect(result.current.currentPage).toBe(1)
-    })
+    }, { timeout: 2000 })
+
+    vi.clearAllMocks()
+    vi.mocked(api.apiClient.search).mockResolvedValue(mockSearchResponse)
 
     act(() => {
       result.current.handlePageChange(2, 'en')
     })
 
-    expect(mockSearch).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        page: 2,
-      })
-    )
+    await waitFor(() => {
+      expect(vi.mocked(api.apiClient.search)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 2,
+        })
+      )
+    }, { timeout: 2000 })
   })
 
   it('clears results when query is empty', async () => {

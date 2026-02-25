@@ -5,17 +5,36 @@ import logging
 import time
 from app.models.request import QueryRequest
 from app.models.response import QueryResponse, Source, ErrorResponse, ErrorDetail
-from app.services.retriever import RetrieverService
-from app.services.context_builder import ContextBuilder
-from app.services.cache_service import CacheService
 from app.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-retriever = RetrieverService()
-context_builder = ContextBuilder()
-cache_service = CacheService()
+# Lazy-loaded services
+_retriever = None
+_context_builder = None
+_cache_service = None
+
+def get_retriever():
+    global _retriever
+    if _retriever is None:
+        from app.services.retriever import RetrieverService
+        _retriever = RetrieverService()
+    return _retriever
+
+def get_context_builder():
+    global _context_builder
+    if _context_builder is None:
+        from app.services.context_builder import ContextBuilder
+        _context_builder = ContextBuilder()
+    return _context_builder
+
+def get_cache_service():
+    global _cache_service
+    if _cache_service is None:
+        from app.services.cache_service import CacheService
+        _cache_service = CacheService()
+    return _cache_service
 
 
 @router.post("/query", response_model=QueryResponse)
@@ -44,14 +63,14 @@ async def query_endpoint(
         )
 
         # Generate cache key
-        cache_key = cache_service.generate_cache_key(
+        cache_key = get_cache_service().generate_cache_key(
             query=request.query,
             language=request.language,
             filters=request.filters
         )
 
         # Try cache hit
-        cached_response = cache_service.get(cache_key)
+        cached_response = get_cache_service().get(cache_key)
         if cached_response:
             logger.info(
                 "Cache hit",
@@ -61,7 +80,7 @@ async def query_endpoint(
             return cached_response
 
         # Retrieve documents
-        retrieved_chunks = retriever.retrieve(
+        retrieved_chunks = get_retriever().retrieve(
             query=request.query,
             language=request.language,
             top_k=request.top_k or settings.rag_top_k,
@@ -76,7 +95,7 @@ async def query_endpoint(
             )
 
         # Build context from retrieved chunks
-        context, sources = context_builder.build_context(retrieved_chunks)
+        context, sources = get_context_builder().build_context(retrieved_chunks)
 
         # Calculate confidence
         if sources:
@@ -105,7 +124,7 @@ async def query_endpoint(
         )
 
         # Cache response
-        cache_service.set(cache_key, response, ttl=settings.rag_cache_ttl_seconds)
+        get_cache_service().set(cache_key, response, ttl=settings.rag_cache_ttl_seconds)
 
         latency_ms = (time.time() - start_time) * 1000
         logger.info(

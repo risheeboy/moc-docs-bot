@@ -11,7 +11,7 @@ export const TypingIndicator: React.FC = () => {
   const { t } = useTranslation()
 
   return (
-    <div className="typing-indicator" aria-label={t('chat.typing')}>
+    <div className="typing-indicator" role="status" aria-label={t('chat.typing')}>
       <span className="dot" />
       <span className="dot" />
       <span className="dot" />

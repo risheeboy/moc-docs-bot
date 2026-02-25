@@ -13,9 +13,9 @@ from .common import (
     Event,
 )
 from .chat import ChatRequest, ChatResponse, ChatStreamResponse
-from .search import SearchRequest, SearchResponse, SearchResult
+from .search import SearchRequest, SearchResponse, SearchResult, SearchSuggestRequest, SearchSuggestResponse
 from .voice import STTRequest, STTResponse, TTSRequest, TTSResponse
-from .translate import TranslateRequest, TranslateResponse, TranslateBatchRequest, TranslateBatchResponse
+from .translate import TranslateRequest, TranslateResponse, TranslateBatchRequest, TranslateBatchResponse, DetectRequest, DetectResponse
 from .document import DocumentUpload, DocumentResponse, DocumentListResponse
 from .feedback import FeedbackCreate, FeedbackResponse
 from .analytics import AnalyticsSummary, QueryStats
@@ -37,6 +37,8 @@ __all__ = [
     "SearchRequest",
     "SearchResponse",
     "SearchResult",
+    "SearchSuggestRequest",
+    "SearchSuggestResponse",
     "STTRequest",
     "STTResponse",
     "TTSRequest",
@@ -45,6 +47,8 @@ __all__ = [
     "TranslateResponse",
     "TranslateBatchRequest",
     "TranslateBatchResponse",
+    "DetectRequest",
+    "DetectResponse",
     "DocumentUpload",
     "DocumentResponse",
     "DocumentListResponse",

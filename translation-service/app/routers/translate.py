@@ -12,8 +12,8 @@ from app.config import settings
 from app.services.cache import translation_cache
 from app.services.indictrans2_engine import indictrans2_engine
 from app.utils.metrics import (
-    translation_duration_histogram,
-    translation_cache_hit_counter,
+    translation_duration_seconds,
+    translation_cache_hit_total,
 )
 
 logger = structlog.get_logger()
@@ -152,9 +152,15 @@ async def translate_text(
                 target_language=request_payload.target_language,
                 request_id=request_id,
             )
-            translation_cache_hit_counter.inc()
+            translation_cache_hit_total.labels(
+                source_language=request_payload.source_language,
+                target_language=request_payload.target_language,
+            ).inc()
             duration_ms = (time.time() - start_time) * 1000
-            translation_duration_histogram.observe(duration_ms / 1000)
+            translation_duration_seconds.labels(
+                source_language=request_payload.source_language,
+                target_language=request_payload.target_language,
+            ).observe(duration_ms / 1000)
             return TranslateResponse(
                 translated_text=cached_translation,
                 source_language=request_payload.source_language,
@@ -187,7 +193,10 @@ async def translate_text(
         )
 
         duration_ms = (time.time() - start_time) * 1000
-        translation_duration_histogram.observe(duration_ms / 1000)
+        translation_duration_seconds.labels(
+            source_language=request_payload.source_language,
+            target_language=request_payload.target_language,
+        ).observe(duration_ms / 1000)
 
         logger.info(
             "Translation completed successfully",

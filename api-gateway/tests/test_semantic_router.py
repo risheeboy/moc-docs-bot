@@ -18,10 +18,12 @@ def test_long_context_query_routing():
     """Test long queries route to long-context model."""
     router = SemanticRouter()
 
+    # Query with >200 characters triggers long-context
     long_query = (
         "Provide a comprehensive analysis of Indian cultural heritage "
         "including historical evolution, contemporary significance, "
-        "and future preservation strategies across all states and regions"
+        "and future preservation strategies across all states and regions "
+        "with detailed explanations of each aspect and how they connect"
     )
 
     route = router.route(long_query, "en")

@@ -64,6 +64,8 @@ async def health_check() -> HealthResponse:
     )
 
     if overall_status == "unhealthy":
-        raise HTTPException(status_code=503, detail=response.model_dump())
+        detail = response.model_dump()
+        detail["timestamp"] = detail["timestamp"].isoformat()
+        raise HTTPException(status_code=503, detail=detail)
 
     return response

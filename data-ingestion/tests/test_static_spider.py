@@ -68,7 +68,7 @@ async def test_extract_images():
     images = await spider._extract_images(soup, "https://example.com")
 
     assert len(images) == 2
-    assert images[0]["alt"] == "Image 1"
+    assert images[0]["alt_text"] == "Image 1"
 
 
 @pytest.mark.asyncio

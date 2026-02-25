@@ -64,7 +64,7 @@ def test_translate_invalid_source_language():
 
     assert response.status_code == 400
     data = response.json()
-    assert data["error"]["code"] == "INVALID_LANGUAGE"
+    assert data["detail"]["error"]["code"] == "INVALID_LANGUAGE"
 
 
 def test_translate_invalid_target_language():
@@ -80,7 +80,7 @@ def test_translate_invalid_target_language():
 
     assert response.status_code == 400
     data = response.json()
-    assert data["error"]["code"] == "INVALID_LANGUAGE"
+    assert data["detail"]["error"]["code"] == "INVALID_LANGUAGE"
 
 
 def test_translate_same_language():
@@ -112,7 +112,7 @@ def test_translate_empty_text():
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_translate_text_too_long():
@@ -127,7 +127,7 @@ def test_translate_text_too_long():
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_translate_missing_text():

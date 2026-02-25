@@ -1,8 +1,44 @@
 import pytest
 import os
+from unittest.mock import MagicMock, patch, AsyncMock
 from fastapi.testclient import TestClient
-from app.main import app
 from app.config import Settings
+
+# Import app after router refactoring to lazy-load services
+from app.main import app
+
+
+@pytest.fixture
+def mock_embedder():
+    """Mock embedder service to avoid downloading models."""
+    mock = MagicMock()
+
+    # Create different embeddings for different texts to test similarity
+    def embed_text_side_effect(text):
+        import numpy as np
+        if "The cat is on the mat" in text:
+            # text1 - reference embedding
+            vec = np.random.RandomState(1).randn(1024)
+        elif "A cat sits on the mat" in text:
+            # text2 - similar to text1 (add small noise)
+            vec = np.random.RandomState(1).randn(1024) + np.random.RandomState(2).randn(1024) * 0.1
+        elif "weather" in text.lower() or "sunny" in text.lower():
+            # text3 - different
+            vec = np.random.RandomState(3).randn(1024)
+        else:
+            # default
+            vec = np.random.RandomState(4).randn(1024)
+
+        return {"dense": vec.tolist(), "text": text}
+
+    mock.embed_text = MagicMock(side_effect=embed_text_side_effect)
+    mock.get_embedding_dimension = MagicMock(return_value=1024)
+    mock.embed_batch = MagicMock(return_value=[
+        {"dense": [0.1] * 1024, "text": "test1"},
+        {"dense": [0.2] * 1024, "text": "test2"},
+        {"dense": [0.3] * 1024, "text": "test3"},
+    ])
+    return mock
 
 
 @pytest.fixture

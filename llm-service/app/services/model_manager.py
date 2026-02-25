@@ -81,7 +81,6 @@ class ModelManager:
                     quantization="awq",
                     tensor_parallel_size=self.config.llm_tensor_parallel_size,
                     pipeline_parallel_size=self.config.llm_pipeline_parallel_size,
-                    disable_log_requests=False,
                     enable_prefix_caching=True,
                     swap_space=4,
                     cpu_offload_gb=4

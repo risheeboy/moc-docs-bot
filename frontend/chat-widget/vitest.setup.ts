@@ -27,6 +27,9 @@ Object.defineProperty(window, 'matchMedia', {
   }))
 })
 
+// Mock scrollIntoView
+Element.prototype.scrollIntoView = vi.fn()
+
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(),
@@ -86,6 +89,15 @@ Object.defineProperty(global.navigator, 'mediaDevices', {
     })
   }
 })
+
+// Mock IntersectionObserver
+class MockIntersectionObserver {
+  constructor(public callback: any) {}
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+;(global as any).IntersectionObserver = MockIntersectionObserver
 
 // Suppress console errors in tests (optional)
 const originalError = console.error

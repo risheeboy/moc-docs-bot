@@ -111,7 +111,7 @@ class TestBilingualOCR:
         assert tesseract_engine._detect_language(text) == "en"
 
         # Hindi-dominant
-        text = "यह हिंदी पाठ है with some English"
+        text = "यह हिंदी पाठ है और बहुत सारा हिंदी with some"
         assert tesseract_engine._detect_language(text) == "hi"
 
 

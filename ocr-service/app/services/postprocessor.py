@@ -102,7 +102,7 @@ class PostProcessor:
             text = text.replace(error, correction)
 
         # Fix common Hindi ligature errors
-        text = re.sub(r"([क-ह])\s+्\s+([य-ज])", r"\1्\2", text)
+        text = re.sub(r"([क-ह])\s+्\s+([य-ह])", r"\1्\2", text)
 
         # Fix matra placement (virama placement errors)
         # This is a simplified fix; real implementation would need

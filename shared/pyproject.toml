@@ -7,7 +7,7 @@ name = "rag-shared"
 version = "1.0.0"
 description = "Shared libraries for RAG-based Hindi QA system (Ministry of Culture)"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
     {name = "RAG QA Team", email = "dev@example.com"}
 ]
@@ -24,7 +24,7 @@ dependencies = [
     "asyncpg==0.30.*",
     "sqlalchemy[asyncio]==2.0.*",
     "pymilvus==2.4.*",
-    "boto3>=1.35.*",
+    "boto3>=1.35,<2",
     "cryptography>=42.0.0",
     "python-multipart==0.0.18",
     "passlib[bcrypt]==1.7.*",

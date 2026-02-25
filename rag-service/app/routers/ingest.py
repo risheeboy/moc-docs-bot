@@ -5,14 +5,27 @@ import logging
 import time
 from app.models.request import IngestRequest
 from app.models.response import IngestResponse, ErrorResponse, ErrorDetail
-from app.services.indexer import IndexerService
-from app.services.cache_service import CacheService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-indexer = IndexerService()
-cache_service = CacheService()
+# Lazy-loaded services
+_indexer = None
+_cache_service = None
+
+def get_indexer():
+    global _indexer
+    if _indexer is None:
+        from app.services.indexer import IndexerService
+        _indexer = IndexerService()
+    return _indexer
+
+def get_cache_service():
+    global _cache_service
+    if _cache_service is None:
+        from app.services.cache_service import CacheService
+        _cache_service = CacheService()
+    return _cache_service
 
 
 @router.post("/ingest", response_model=IngestResponse)
@@ -43,7 +56,7 @@ async def ingest_endpoint(
         )
 
         # Ingest document
-        chunk_ids = indexer.ingest_document(
+        chunk_ids = get_indexer().ingest_document(
             document_id=request.document_id,
             title=request.title,
             source_url=request.source_url,
@@ -56,7 +69,7 @@ async def ingest_endpoint(
         )
 
         # Invalidate cache after ingestion
-        cache_service.invalidate_all()
+        get_cache_service().invalidate_all()
 
         latency_ms = (time.time() - start_time) * 1000
         logger.info(

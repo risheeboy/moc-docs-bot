@@ -54,7 +54,8 @@ async def test_model_unloading(model_manager):
     """Test model unloading"""
     # First load
     with patch('app.services.model_manager.AsyncLLMEngine.from_engine_args') as mock_engine:
-        mock_engine.return_value = MagicMock()
+        mock_instance = AsyncMock()
+        mock_engine.return_value = mock_instance
         await model_manager.load_model("standard")
         assert model_manager.is_model_loaded("standard")
 

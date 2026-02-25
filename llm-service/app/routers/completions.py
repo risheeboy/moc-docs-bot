@@ -7,7 +7,7 @@ Supports both streaming (SSE) and non-streaming responses.
 import logging
 import uuid
 from typing import Optional
-from fastapi import APIRouter, HTTPException, status, Header, Body
+from fastapi import APIRouter, HTTPException, status, Header, Body, Depends
 from fastapi.responses import StreamingResponse
 from app.models.completions import (
     ChatCompletionRequest,
@@ -30,14 +30,38 @@ def get_request_id(x_request_id: Optional[str] = Header(None)) -> str:
     return x_request_id or str(uuid.uuid4())
 
 
-@router.post("/v1/chat/completions", tags=["completions"])
+def get_model_manager_dependency():
+    """Get model manager for dependency injection."""
+    from app.main import get_model_manager
+    return get_model_manager()
+
+
+def get_generation_service_dependency():
+    """Get generation service for dependency injection."""
+    from app.main import get_generation_service
+    return get_generation_service()
+
+
+def get_guardrails_service_dependency():
+    """Get guardrails service for dependency injection."""
+    from app.main import get_guardrails_service
+    return get_guardrails_service()
+
+
+def get_metrics_dependency():
+    """Get metrics for dependency injection."""
+    from app.main import get_metrics
+    return get_metrics()
+
+
+@router.post("/v1/chat/completions", response_model=None, tags=["completions"])
 async def chat_completions(
     request: ChatCompletionRequest,
     x_request_id: str = Header(None),
-    model_manager: ModelManager = None,
-    generation_service: GenerationService = None,
-    guardrails_service: GuardrailsService = None,
-    metrics: MetricsCollector = None
+    model_manager: ModelManager = Depends(get_model_manager_dependency),
+    generation_service: GenerationService = Depends(get_generation_service_dependency),
+    guardrails_service: GuardrailsService = Depends(get_guardrails_service_dependency),
+    metrics: MetricsCollector = Depends(get_metrics_dependency)
 ) -> ChatCompletionResponse | StreamingResponse:
     """
     OpenAI-compatible chat completions endpoint.

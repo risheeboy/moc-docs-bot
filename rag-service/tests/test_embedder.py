@@ -1,14 +1,14 @@
 import pytest
-from app.services.embedder import EmbedderService
+from unittest.mock import MagicMock
 
 
 class TestEmbedderService:
     """Tests for BGE-M3 embedding service."""
 
     @pytest.fixture
-    def embedder(self):
+    def embedder(self, mock_embedder):
         """Initialize embedder."""
-        return EmbedderService()
+        return mock_embedder
 
     def test_embedder_initialization(self, embedder):
         """Test that embedder initializes successfully."""

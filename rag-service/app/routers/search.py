@@ -5,15 +5,28 @@ import logging
 import time
 from app.models.request import SearchRequest
 from app.models.response import SearchResponse, SearchResult, MultimediaResult, EventResult, ErrorResponse, ErrorDetail
-from app.services.retriever import RetrieverService
-from app.services.cache_service import CacheService
 from app.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-retriever = RetrieverService()
-cache_service = CacheService()
+# Lazy-loaded services
+_retriever = None
+_cache_service = None
+
+def get_retriever():
+    global _retriever
+    if _retriever is None:
+        from app.services.retriever import RetrieverService
+        _retriever = RetrieverService()
+    return _retriever
+
+def get_cache_service():
+    global _cache_service
+    if _cache_service is None:
+        from app.services.cache_service import CacheService
+        _cache_service = CacheService()
+    return _cache_service
 
 
 @router.post("/search", response_model=SearchResponse)
@@ -43,7 +56,7 @@ async def search_endpoint(
         )
 
         # Generate cache key
-        cache_key = cache_service.generate_cache_key(
+        cache_key = get_cache_service().generate_cache_key(
             query=request.query,
             language=request.language,
             filters=request.filters,
@@ -52,7 +65,7 @@ async def search_endpoint(
         )
 
         # Try cache hit
-        cached_response = cache_service.get(cache_key)
+        cached_response = get_cache_service().get(cache_key)
         if cached_response:
             logger.info(
                 "Cache hit",
@@ -67,7 +80,7 @@ async def search_endpoint(
         offset = (page - 1) * page_size
 
         # Retrieve more documents than needed for pagination
-        retrieved_chunks = retriever.retrieve(
+        retrieved_chunks = get_retriever().retrieve(
             query=request.query,
             language=request.language,
             top_k=settings.rag_top_k * 2,  # Retrieve extra for pagination
@@ -138,7 +151,7 @@ async def search_endpoint(
         )
 
         # Cache response
-        cache_service.set(cache_key, response, ttl=settings.rag_cache_ttl_seconds)
+        get_cache_service().set(cache_key, response, ttl=settings.rag_cache_ttl_seconds)
 
         latency_ms = (time.time() - start_time) * 1000
         logger.info(

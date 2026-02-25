@@ -120,12 +120,21 @@ class TestSTTModel:
 
     def test_stt_model_singleton(self):
         """Test STT model uses singleton pattern"""
-        from app.services.indic_conformer_stt import get_stt_model
+        from unittest.mock import patch, Mock
+        import app.services.indic_conformer_stt as stt_module
 
-        model1 = get_stt_model()
-        model2 = get_stt_model()
-
-        assert model1 is model2
+        mock_model = Mock()
+        # Reset the global singleton, then patch the class constructor
+        original = stt_module.stt_model
+        try:
+            stt_module.stt_model = None
+            with patch.object(stt_module, 'IndicConformerSTT', return_value=mock_model):
+                model1 = stt_module.get_stt_model()
+                model2 = stt_module.get_stt_model()
+                assert model1 is model2
+                assert model1 is mock_model
+        finally:
+            stt_module.stt_model = original
 
 
 class TestTTSModels:

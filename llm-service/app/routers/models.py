@@ -4,7 +4,7 @@ Exposes GET /v1/models endpoint listing available models.
 """
 
 import logging
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from app.models.completions import ModelListResponse, ModelInfo
 from app.services.model_manager import ModelManager
 
@@ -12,8 +12,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def get_model_manager_dependency():
+    """Get model manager for dependency injection."""
+    from app.main import get_model_manager
+    return get_model_manager()
+
+
 @router.get("/v1/models", response_model=ModelListResponse, tags=["models"])
-async def list_models(model_manager: ModelManager = None) -> ModelListResponse:
+async def list_models(model_manager: ModelManager = Depends(get_model_manager_dependency)) -> ModelListResponse:
     """
     List all available LLM models.
 
@@ -23,9 +29,6 @@ async def list_models(model_manager: ModelManager = None) -> ModelListResponse:
         ModelListResponse containing list of available models
     """
     try:
-        if model_manager is None:
-            from app.main import get_model_manager
-            model_manager = get_model_manager()
 
         # Build model list
         models = []

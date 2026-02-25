@@ -7,7 +7,7 @@ import time
 import logging
 from datetime import datetime
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.services.model_manager import ModelManager
 from app.models.health import HealthResponse, DependencyHealth
 
@@ -18,8 +18,14 @@ router = APIRouter()
 _service_start_time = time.time()
 
 
+def get_model_manager_dependency():
+    """Get model manager for dependency injection."""
+    from app.main import get_model_manager
+    return get_model_manager()
+
+
 @router.get("/health", response_model=HealthResponse, tags=["health"])
-async def health_check(model_manager: ModelManager = None) -> HealthResponse:
+async def health_check(model_manager: ModelManager = Depends(get_model_manager_dependency)) -> HealthResponse:
     """
     Health check endpoint reporting service and per-model status.
 
@@ -27,11 +33,6 @@ async def health_check(model_manager: ModelManager = None) -> HealthResponse:
         HealthResponse with overall status and per-model loaded state
     """
     try:
-        if model_manager is None:
-            # This would be injected by FastAPI dependency
-            from app.main import get_model_manager
-            model_manager = get_model_manager()
-
         uptime_seconds = time.time() - _service_start_time
 
         # Check model statuses
@@ -88,7 +89,9 @@ async def health_check(model_manager: ModelManager = None) -> HealthResponse:
         )
 
         if http_status != status.HTTP_200_OK:
-            raise HTTPException(status_code=http_status, detail=response.model_dump())
+            detail = response.model_dump()
+            detail["timestamp"] = detail["timestamp"].isoformat()
+            raise HTTPException(status_code=http_status, detail=detail)
 
         return response
 

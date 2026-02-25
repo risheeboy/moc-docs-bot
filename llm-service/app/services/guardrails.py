@@ -6,7 +6,7 @@ and topic-based guardrails.
 
 import re
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from app.models.completions import Message
 
 logger = logging.getLogger(__name__)
@@ -16,8 +16,9 @@ class GuardrailsService:
     """Content filtering and safety validation service"""
 
     # PII patterns
+    # Phone pattern must come first to avoid conflicts with Aadhaar (phone: +91XXXXXXXXXX)
+    PHONE_PATTERN = r"(?:\+91|0)[6-9]\d{9}"
     AADHAAR_PATTERN = r"\b[0-9]{4}\s?[0-9]{4}\s?[0-9]{4}\b"
-    PHONE_PATTERN = r"\b(?:\+91|0)?[6-9]\d{9}\b"
     EMAIL_PATTERN = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
     PAN_PATTERN = r"\b[A-Z]{5}[0-9]{4}[A-Z]\b"
 
@@ -146,11 +147,11 @@ class GuardrailsService:
         Returns:
             Text with PII redacted
         """
+        # Redact phone numbers first (to avoid conflicts with Aadhaar pattern)
+        text = re.sub(self.PHONE_PATTERN, "[PHONE_REDACTED]", text)
+
         # Redact Aadhaar
         text = re.sub(self.AADHAAR_PATTERN, "[AADHAAR_REDACTED]", text)
-
-        # Redact phone numbers
-        text = re.sub(self.PHONE_PATTERN, "[PHONE_REDACTED]", text)
 
         # Redact emails
         text = re.sub(self.EMAIL_PATTERN, "[EMAIL_REDACTED]", text)

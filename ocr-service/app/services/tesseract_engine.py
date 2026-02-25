@@ -254,8 +254,15 @@ class TesseractOCREngine:
         """
         # Count Devanagari characters (Hindi)
         devanagari_count = sum(1 for c in text if "\u0900" <= c <= "\u097f")
+        # Count Latin characters (English)
+        latin_count = sum(1 for c in text if ("a" <= c.lower() <= "z") or ("0" <= c <= "9"))
 
-        # If more than 10% Devanagari, likely Hindi
-        if devanagari_count > len(text) * 0.1:
+        # If no script characters found, default to English
+        total_script_chars = devanagari_count + latin_count
+        if total_script_chars == 0:
+            return "en"
+
+        # Return the dominant language
+        if devanagari_count > latin_count:
             return "hi"
         return "en"

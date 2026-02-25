@@ -48,23 +48,10 @@ translation_duration_seconds = Histogram(
     registry=_registry,
 )
 
-translation_duration_histogram = Histogram(
-    "translation_duration_seconds",
-    "Translation operation duration in seconds",
-    buckets=(0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-    registry=_registry,
-)
-
 translation_cache_hit_total = Counter(
     "translation_cache_hit_total",
     "Total translation cache hits",
     labelnames=["source_language", "target_language"],
-    registry=_registry,
-)
-
-translation_cache_hit_counter = Counter(
-    "translation_cache_hit_total",
-    "Total translation cache hits",
     registry=_registry,
 )
 

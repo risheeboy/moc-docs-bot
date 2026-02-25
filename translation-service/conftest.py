@@ -1,6 +1,7 @@
 """Pytest configuration and fixtures for Translation Service tests"""
 
 import pytest
+import pytest_asyncio
 import asyncio
 from unittest.mock import AsyncMock, patch
 from app.services.indictrans2_engine import indictrans2_engine
@@ -15,7 +16,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def mock_indictrans2_init():
     """Mock IndicTrans2 initialization for all tests"""
     with patch.object(indictrans2_engine, "_initialized", True):
@@ -24,7 +25,7 @@ async def mock_indictrans2_init():
                 yield
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def mock_redis_cache():
     """Mock Redis cache for all tests"""
     with patch.object(translation_cache, "_connected", True):

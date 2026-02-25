@@ -3,10 +3,34 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
 import { MessageBubble } from '../src/components/MessageBubble'
 import { Message } from '../src/types'
+
+// Initialize i18n for tests
+if (!i18n.isInitialized) {
+  i18n.use(initReactI18next).init({
+    lng: 'en',
+    fallbackLng: 'en',
+    resources: {
+      en: {
+        translation: {
+          'sources.title': 'Sources',
+          'chat.fallback': 'This is a fallback response',
+          'chat.helpful': 'Was this helpful?',
+          'chat.yes': 'Yes',
+          'chat.no': 'No'
+        }
+      }
+    },
+    interpolation: {
+      escapeValue: false
+    }
+  })
+}
 
 describe('MessageBubble', () => {
   const mockMessage: Message = {
@@ -58,8 +82,8 @@ describe('MessageBubble', () => {
       content: ''
     }
     render(<MessageBubble message={streamingMessage} isStreaming={true} />)
-    const indicator = screen.getByRole('status', { hidden: true })
-    expect(indicator).toBeInTheDocument()
+    const indicators = screen.getAllByRole('status')
+    expect(indicators.length).toBeGreaterThan(0)
   })
 
   it('displays markdown content', () => {
@@ -79,8 +103,14 @@ describe('MessageBubble', () => {
   })
 
   it('renders source links as external', () => {
-    render(<MessageBubble message={mockAssistantMessage} />)
-    const link = screen.getByRole('link', { name: /visit source/i })
+    const { container } = render(<MessageBubble message={mockAssistantMessage} />)
+    // Expand the source card to see the link
+    const expandBtn = screen.getByLabelText(/Toggle details for Test Source/i)
+    fireEvent.click(expandBtn)
+    // Now find the link
+    const links = container.querySelectorAll('a.source-link')
+    expect(links.length).toBeGreaterThan(0)
+    const link = links[0] as HTMLAnchorElement
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
