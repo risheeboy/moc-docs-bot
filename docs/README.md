@@ -1,10 +1,5 @@
 # Documentation — RAG-Based Hindi & English, Search & QA System
 
-**Version:** 1.0.0
-**Last Updated:** February 24, 2026
-
----
-
 ## Quick Links
 
 **Getting Started?** Start here:
