@@ -1,7 +1,6 @@
 # Documentation — RAG-Based Hindi & English, Search & QA System
 
 **Version:** 1.0.0
-**For:** Ministry of Culture, Government of India
 **Last Updated:** February 24, 2026
 
 ---
@@ -24,7 +23,7 @@
 
 ## Overview
 
-This is the complete documentation package for a **RAG-based Conversational AI System** for the Ministry of Culture. The system provides:
+This is the complete documentation package for a **RAG-based Conversational AI System**. The system provides:
 
 - **Chatbot:** Multi-turn conversations about Indian culture, heritage, and government programs
 - **Search:** Unified semantic search across 30+ Ministry websites
@@ -280,7 +279,6 @@ See [API_Reference.md](api/API_Reference.md) for full specifications.
 
 ### Compliance Standards
 
-✓ **GIGW** — Government of India Websites guidelines
 ✓ **WCAG 2.1 AA** — Accessibility for users with disabilities
 ✓ **IT Rules 2021** — Data residency & security
 ✓ **Personal Data Protection** — User privacy safeguards
@@ -291,11 +289,6 @@ All documented in [compliance/](compliance/) directory.
 ---
 
 ## Support & Contact
-
-**For Technical Issues:**
-- Email: arit-culture@gov.in
-- Phone: 011-23388261 (Ministry helpline)
-- Hours: Monday-Friday, 9 AM - 6 PM IST
 
 **For Documentation Feedback:**
 - Suggest improvements to this documentation
@@ -326,7 +319,6 @@ All documented in [compliance/](compliance/) directory.
 | **API** | Application Programming Interface (communication between services) |
 | **SPA** | Single Page Application (React frontend app) |
 | **WCAG** | Web Content Accessibility Guidelines |
-| **GIGW** | Government of India Websites (design guidelines) |
 | **NIC** | National Informatics Centre (India's IT infrastructure) |
 | **MeitY** | Ministry of Electronics & Information Technology |
 | **SBOM** | Software Bill of Materials (list of open-source components) |
@@ -339,8 +331,6 @@ All documented in [compliance/](compliance/) directory.
 ---
 
 ## License
-
-**All custom code:** Property of Ministry of Culture, Government of India
 
 **Third-party components:** See [LICENSE_INVENTORY.md](compliance/LICENSE_INVENTORY.md) for complete list of open-source licenses and SBOM.
 
@@ -418,6 +408,4 @@ docs/
 
 ---
 
-**Thank you for using the Ministry of Culture RAG-QA Documentation!**
-
-For questions or updates, contact: arit-culture@gov.in
+**Thank you for using RAG-QA Documentation!**
